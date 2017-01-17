@@ -245,7 +245,7 @@ class CrudCommand extends Command
                         '--route-group'     => ($crud_entry->routeGroup) ? $crud_entry->routeGroup : '/',
                         '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : '',
                         '--fields'          => $fields,
-                        '--validations'     => ($validations) ? '' : ''], 1));
+                        '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : ''], 1));
                 }
 
             }
