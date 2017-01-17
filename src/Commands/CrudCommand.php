@@ -193,7 +193,7 @@ class CrudCommand extends Command
 
         $data = json_decode($json);
 
-        log::info(print_r($data, 1));
+        log::info(print_r($data->CRUD, 1));
 
     }
 }
