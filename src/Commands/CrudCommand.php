@@ -4,7 +4,6 @@ namespace Appzcoder\CrudGenerator\Commands;
 
 use File;
 use Illuminate\Console\Command;
-use Log;
 
 class CrudCommand extends Command
 {
@@ -192,8 +191,8 @@ class CrudCommand extends Command
         }
 
         $data = json_decode($json);
-
-        log::info(print_r($data->CRUD, 1));
+        $this->info($data->CRUD->name);
+        // log::info(print_r($data->CRUD, 1));
 
     }
 }
