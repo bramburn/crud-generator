@@ -66,6 +66,11 @@ class CrudCommand extends Command
         $migrationName = str_plural(snake_case($name));
         $tableName     = $migrationName;
 
+        if ($this->option('complexjson')) {
+            $this->info('running boss mode');
+            exit();
+        }
+
         $routeGroup      = $this->option('route-group');
         $this->routeName = ($routeGroup) ? $routeGroup . '/' . snake_case($name, '-') : snake_case($name, '-');
         $perPage         = intval($this->option('pagination'));
