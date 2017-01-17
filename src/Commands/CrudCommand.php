@@ -4,6 +4,7 @@ namespace Appzcoder\CrudGenerator\Commands;
 
 use File;
 use Illuminate\Console\Command;
+use Log;
 
 class CrudCommand extends Command
 {
@@ -67,6 +68,7 @@ class CrudCommand extends Command
         $tableName     = $migrationName;
 
         if ($this->option('complexjson')) {
+            $this->ProcessComplexJson($this->option('complexjson'));
             $this->info('running boss mode');
             exit();
         }
@@ -185,6 +187,8 @@ class CrudCommand extends Command
 
         $json = File::get($fullFilePath);
         $data = json_decode($json);
+
+        log::info(print_r($data, 1));
 
     }
 }
