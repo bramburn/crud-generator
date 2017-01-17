@@ -191,7 +191,7 @@ class CrudCommand extends Command
         }
 
         $data = json_decode($json);
-        $this->info($data->CRUD->name);
+        $this->info(print_r($data, 1));
         // log::info(print_r($data->CRUD, 1));
 
     }
