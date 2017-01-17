@@ -192,7 +192,7 @@ class CrudCommand extends Command
 
         $data = json_decode($json);
 
-        foreach ($data->CRUD as $entry) {
+        foreach ($data as $entry) {
             // each entry is a CRUD
             $this->info(print_r($entry, 1));
             // $this->info("Creating CRUD - ".$entry-)
