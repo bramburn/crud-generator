@@ -38,28 +38,28 @@ class CrudMigrationCommand extends GeneratorCommand
      * @var array
      */
     protected $typeLookup = [
-        'char' => 'char',
-        'date' => 'date',
-        'datetime' => 'dateTime',
-        'time' => 'time',
-        'timestamp' => 'timestamp',
-        'text' => 'text',
+        'char'       => 'char',
+        'date'       => 'date',
+        'datetime'   => 'dateTime',
+        'time'       => 'time',
+        'timestamp'  => 'timestamp',
+        'text'       => 'text',
         'mediumtext' => 'mediumText',
-        'longtext' => 'longText',
-        'json' => 'json',
-        'jsonb' => 'jsonb',
-        'binary' => 'binary',
-        'number' => 'integer',
-        'integer' => 'integer',
-        'bigint' => 'bigInteger',
-        'mediumint' => 'mediumInteger',
-        'tinyint' => 'tinyInteger',
-        'smallint' => 'smallInteger',
-        'boolean' => 'boolean',
-        'decimal' => 'decimal',
-        'double' => 'double',
-        'float' => 'float',
-        'enum' => 'enum',
+        'longtext'   => 'longText',
+        'json'       => 'json',
+        'jsonb'      => 'jsonb',
+        'binary'     => 'binary',
+        'number'     => 'integer',
+        'integer'    => 'integer',
+        'bigint'     => 'bigInteger',
+        'mediumint'  => 'mediumInteger',
+        'tinyint'    => 'tinyInteger',
+        'smallint'   => 'smallInteger',
+        'boolean'    => 'boolean',
+        'decimal'    => 'decimal',
+        'double'     => 'double',
+        'float'      => 'float',
+        'enum'       => 'enum',
     ];
 
     /**
@@ -83,7 +83,7 @@ class CrudMigrationCommand extends GeneratorCommand
      */
     protected function getPath($name)
     {
-        $name = str_replace($this->laravel->getNamespace(), '', $name);
+        $name       = str_replace($this->laravel->getNamespace(), '', $name);
         $datePrefix = date('Y_m_d_His');
 
         return database_path('/migrations/') . $datePrefix . '_create_' . $name . '_table.php';
@@ -104,7 +104,7 @@ class CrudMigrationCommand extends GeneratorCommand
         $className = 'Create' . str_replace(' ', '', ucwords(str_replace('_', ' ', $tableName))) . 'Table';
 
         $fieldsToIndex = trim($this->option('indexes')) != '' ? explode(',', $this->option('indexes')) : [];
-        $foreignKeys = trim($this->option('foreign-keys')) != '' ? explode(',', $this->option('foreign-keys')) : [];
+        $foreignKeys   = trim($this->option('foreign-keys')) != '' ? explode(',', $this->option('foreign-keys')) : [];
 
         $schema = rtrim($this->option('schema'), ';');
         $fields = explode(';', $schema);
@@ -114,7 +114,7 @@ class CrudMigrationCommand extends GeneratorCommand
         if ($schema) {
             $x = 0;
             foreach ($fields as $field) {
-                $fieldArray = explode('#', $field);
+                $fieldArray       = explode('#', $field);
                 $data[$x]['name'] = trim($fieldArray[0]);
                 $data[$x]['type'] = trim($fieldArray[1]);
 

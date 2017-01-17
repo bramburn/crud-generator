@@ -60,17 +60,17 @@ class CrudCommand extends Command
      */
     public function handle()
     {
-        $name = $this->argument('name');
-        $modelName = str_singular($name);
+        $name          = $this->argument('name');
+        $modelName     = str_singular($name);
         $migrationName = str_plural(snake_case($name));
-        $tableName = $migrationName;
+        $tableName     = $migrationName;
 
-        $routeGroup = $this->option('route-group');
+        $routeGroup      = $this->option('route-group');
         $this->routeName = ($routeGroup) ? $routeGroup . '/' . snake_case($name, '-') : snake_case($name, '-');
-        $perPage = intval($this->option('pagination'));
+        $perPage         = intval($this->option('pagination'));
 
         $controllerNamespace = ($this->option('controller-namespace')) ? $this->option('controller-namespace') . '\\' : '';
-        $modelNamespace = ($this->option('model-namespace')) ? trim($this->option('model-namespace')) . '\\' : '';
+        $modelNamespace      = ($this->option('model-namespace')) ? trim($this->option('model-namespace')) . '\\' : '';
 
         $fields = rtrim($this->option('fields'), ';');
 
@@ -79,25 +79,25 @@ class CrudCommand extends Command
         }
 
         $primaryKey = $this->option('pk');
-        $viewPath = $this->option('view-path');
+        $viewPath   = $this->option('view-path');
 
         $foreignKeys = $this->option('foreign-keys');
 
-        $fieldsArray = explode(';', $fields);
+        $fieldsArray   = explode(';', $fields);
         $fillableArray = [];
 
         foreach ($fieldsArray as $item) {
-            $spareParts = explode('#', trim($item));
+            $spareParts      = explode('#', trim($item));
             $fillableArray[] = $spareParts[0];
         }
 
         $commaSeparetedString = implode("', '", $fillableArray);
-        $fillable = "['" . $commaSeparetedString . "']";
+        $fillable             = "['" . $commaSeparetedString . "']";
 
         $localize = $this->option('localize');
-        $locales = $this->option('locales');
+        $locales  = $this->option('locales');
 
-        $indexes = $this->option('indexes');
+        $indexes       = $this->option('indexes');
         $relationships = $this->option('relationships');
 
         $validations = trim($this->option('validations'));
@@ -151,7 +151,7 @@ class CrudCommand extends Command
      */
     protected function processJSONFields($file)
     {
-        $json = File::get($file);
+        $json   = File::get($file);
         $fields = json_decode($json);
 
         $fieldsString = '';
