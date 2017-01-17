@@ -242,7 +242,7 @@ class CrudCommand extends Command
                         '--model-name'      => ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name),
                         '--model-namespace' => ($crud_entry->modelNamespace) ? $crud_entry->modelNamespace : '',
                         '--view-path'       => ($crud_entry->routePath) ? $crud_entry->routePath : '', //changed it from viewPath to routePath as it made more sense
-                        '--route-group'     => ($crud_entry->routeGroup) ? $crud_entry->routeGroup : '/',
+                        '--route-group'     => ($crud_entry->routeGroup) ? $crud_entry->routeGroup : '',
                         '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : '',
                         '--fields'          => $fields,
                         '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : '']);
@@ -272,7 +272,7 @@ class CrudCommand extends Command
                 case 'select':
                     $fieldsString .= $field->name . '#' . $field->type . '#options=' . implode(',', $field->options) . ';';
                     break;
-                case 'oneToMany':
+                case 'OneToMany':
                     // don't do anything for now as this needs to be RE-run in a function for now.
                     break;
 
