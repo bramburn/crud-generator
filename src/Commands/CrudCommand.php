@@ -234,7 +234,7 @@ class CrudCommand extends Command
 
                     $this->info("Class " . $crud_entry->controller_namespace, $crud_entry->name . " does not exists...creating it now");
                     // generating fields
-                    $fields = $this->ProcessComplexJsonFields($crud_entry->data['fields']);
+                    $fields = $this->ProcessComplexJsonFields($crud_entry->data->fields);
 
                     $this->info('crud:controller' . print_r([
                         'name'              => $crud_entry->controller_namespace . $crud_entry->name . 'Controller',
