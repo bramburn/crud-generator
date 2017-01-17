@@ -233,7 +233,7 @@ class CrudCommand extends Command
                 } else {
 
                     $this->info("Class " . $crud_entry->controller_namespace, $crud_entry->name . " does not exists...creating it now");
-
+                    $fields = $this->ProcessComplexJsonFields($crud_entry->data->fields);
                     $this->info('crud:controller' . print_r([
                         'name'              => $crud_entry->controller_namespace . $crud_entry->name . 'Controller',
                         '--crud-name'       => $crud_entry->name,
@@ -256,7 +256,7 @@ class CrudCommand extends Command
     }
 
     /**
-     * Processes the new complex json
+     * Processes the new complex json fields
      *
      * @return fieldString
      * @author bramburn
@@ -271,7 +271,7 @@ class CrudCommand extends Command
                     $fieldsString .= $field->name . '#' . $field->type . '#options=' . implode(',', $field->options) . ';';
                     break;
                 case 'oneToMany':
-                    # code...
+                    // don't do anything for now as this needs to be RE-run in a function for now.
                     break;
 
                 default:
