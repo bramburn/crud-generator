@@ -187,11 +187,17 @@ class CrudCommand extends Command
         {
             $json = File::get($fullFilePath);
         } catch (Illuminate\Filesystem\FileNotFoundException $exception) {
-            $this->info("File does not exists");
+            $this->error("File does not exists");
         }
 
         $data = json_decode($json);
-        $this->info(print_r($data, 1));
+
+        foreach ($data->CRUD as $entry) {
+            // each entry is a CRUD
+            $this->info(print_r($entry, 1));
+            // $this->info("Creating CRUD - ".$entry-)
+        }
+        // $this->info(print_r($data, 1));
         // log::info(print_r($data->CRUD, 1));
 
     }
