@@ -243,7 +243,7 @@ class CrudCommand extends Command
                         '--model-namespace' => ($crud_entry->modelNamespace) ? $crud_entry->modelNamespace : '',
                         '--view-path'       => ($crud_entry->routePath) ? $crud_entry->routePath : '', //changed it from viewPath to routePath as it made more sense
                         '--route-group'     => ($crud_entry->routeGroup) ? $crud_entry->routeGroup : '',
-                        '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : '',
+                        '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : 10,
                         '--fields'          => $fields,
                         '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : '']);
                 }

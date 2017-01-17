@@ -71,16 +71,16 @@ class CrudControllerCommand extends GeneratorCommand
     {
         $stub = $this->files->get($this->getStub());
 
-        $viewPath = $this->option('view-path') ? $this->option('view-path') . '.' : '';
-        $crudName = strtolower($this->option('crud-name'));
+        $viewPath         = $this->option('view-path') ? $this->option('view-path') . '.' : '';
+        $crudName         = strtolower($this->option('crud-name'));
         $crudNameSingular = str_singular($crudName);
-        $modelName = $this->option('model-name');
-        $modelNamespace = $this->option('model-namespace');
-        $routeGroup = ($this->option('route-group')) ? $this->option('route-group') . '/' : '';
-        $perPage = intval($this->option('pagination'));
-        $viewName = snake_case($this->option('crud-name'), '-');
-        $fields = $this->option('fields');
-        $validations = rtrim($this->option('validations'), ';');
+        $modelName        = $this->option('model-name');
+        $modelNamespace   = $this->option('model-namespace');
+        $routeGroup       = ($this->option('route-group')) ? $this->option('route-group') . '/' : '';
+        $perPage          = intval($this->option('pagination'));
+        $viewName         = snake_case($this->option('crud-name'), '-');
+        $fields           = $this->option('fields');
+        $validations      = rtrim($this->option('validations'), ';');
 
         $validationRules = '';
         if (trim($validations) != '') {
@@ -93,9 +93,9 @@ class CrudControllerCommand extends GeneratorCommand
                 }
 
                 // extract field name and args
-                $parts = explode('#', $v);
+                $parts     = explode('#', $v);
                 $fieldName = trim($parts[0]);
-                $rules = trim($parts[1]);
+                $rules     = trim($parts[1]);
                 $validationRules .= "\n\t\t\t'$fieldName' => '$rules',";
             }
 
