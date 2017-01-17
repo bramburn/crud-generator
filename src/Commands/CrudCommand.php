@@ -245,7 +245,7 @@ class CrudCommand extends Command
                         '--route-group'     => ($crud_entry->routeGroup) ? $crud_entry->routeGroup : '/',
                         '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : '',
                         '--fields'          => $fields,
-                        '--validations'     => ($validations) ? '', ''], 1));
+                        '--validations'     => ($validations) ? '' : ''], 1));
                 }
 
             }
@@ -269,7 +269,7 @@ class CrudCommand extends Command
         foreach ($entry as $field) {
 
             switch ($field->type) {
-                case 'select' :
+                case 'select':
                     $fieldsString .= $field->name . '#' . $field->type . '#options=' . implode(',', $field->options) . ';';
                     break;
                 case 'oneToMany':
