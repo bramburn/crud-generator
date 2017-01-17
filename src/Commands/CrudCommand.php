@@ -184,8 +184,13 @@ class CrudCommand extends Command
      **/
     protected function ProcessComplexJson($fullFilePath)
     {
+        try
+        {
+            $json = File::get($fullFilePath);
+        } catch (Illuminate\Filesystem\FileNotFoundException $exception) {
+            $this->info("File does not exists");
+        }
 
-        $json = File::get($fullFilePath);
         $data = json_decode($json);
 
         log::info(print_r($data, 1));
