@@ -194,7 +194,16 @@ class CrudCommand extends Command
 
         foreach ($data as $entry) {
             // each entry is a CRUD
-            $this->info(print_r($entry, 1));
+
+            foreach ($entry as $database) {
+                if (class_exists($database->controller_namespace, $database->name)) {
+                    $this->error("Class " . $database->controller_namespace, $database->name . " does not exists");
+                } else {
+                    $this->info(print_r($database->name, 1));
+                }
+
+            }
+
             // $this->info("Creating CRUD - ".$entry-)
         }
         // $this->info(print_r($data, 1));
