@@ -1,0 +1,49 @@
+{
+    "CRUD": [{
+        "name": "testCrud",
+        "data": [{
+            "fields": [{
+                "name": "title",
+                "type": "string",
+                "showform": "yes",
+            }, {
+                "name": "content",
+                "type": "text",
+                "showform": "yes",
+            }, {
+                "name": "attachment",
+                "type": "OneToMany",
+                "addFormToParent": "yes",
+                "database_name": "attachments",
+                "data": [{
+                    "fields": [{
+                        "name": "title",
+                        "type": "string",
+                        "showform": "yes",
+                    }, {
+                        "name": "file",
+                        "type": "file",
+                        "showform": "yes",
+                    }]
+                }]
+            }, {
+                "name": "view",
+                "type": "integer",
+                "showform": "no"
+            }, {
+                "name": "comments",
+                "type": "OneToMany",
+                "addFormToParent": "yes",
+                "database_name": "testComments",
+                "data": [{
+                    "fields": [{
+                        "name": "comment",
+                        "type": "text",
+                        "showform": "yes"
+                    }]
+                }]
+            }]
+        }]
+    }],
+    
+}

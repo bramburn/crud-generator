@@ -15,6 +15,7 @@ class CrudCommand extends Command
     protected $signature = 'crud:generate
                             {name : The name of the Crud.}
                             {--fields= : Fields name for the form & migration.}
+                            {--complexjson= : Create Complex CRUD with multiple relationship easily.}
                             {--fields_from_file= : Fields from a json file.}
                             {--validations= : Validation details for the fields.}
                             {--controller-namespace= : Namespace of the controller.}
@@ -166,5 +167,19 @@ class CrudCommand extends Command
         $fieldsString = rtrim($fieldsString, ';');
 
         return $fieldsString;
+    }
+
+    /**
+     * This processes a complex json field which includes a lot of information.
+     *
+     * @return BULL
+     * @author bramburn (icelabz.co.uk)
+     **/
+    protected function ProcessComplexJson($fullFilePath)
+    {
+
+        $json = File::get($fullFilePath);
+        $data = json_decode($json);
+
     }
 }
