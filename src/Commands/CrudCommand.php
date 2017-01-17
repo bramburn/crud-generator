@@ -236,7 +236,7 @@ class CrudCommand extends Command
                     // generating fields
                     $fields = $this->ProcessComplexJsonFields($crud_entry->data->fields);
 
-                    $this->info('crud:controller' . print_r([
+                    $this->call('crud:controller', [
                         'name'              => $crud_entry->controller_namespace . $crud_entry->name . 'Controller',
                         '--crud-name'       => $crud_entry->name,
                         '--model-name'      => ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name),
@@ -245,7 +245,7 @@ class CrudCommand extends Command
                         '--route-group'     => ($crud_entry->routeGroup) ? $crud_entry->routeGroup : '/',
                         '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : '',
                         '--fields'          => $fields,
-                        '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : ''], 1));
+                        '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : '']);
                 }
 
             }
