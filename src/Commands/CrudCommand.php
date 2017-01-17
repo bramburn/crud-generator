@@ -109,10 +109,41 @@ class CrudCommand extends Command
 
         $validations = trim($this->option('validations'));
 
-        $this->call('crud:controller', ['name' => $controllerNamespace . $name . 'Controller', '--crud-name' => $name, '--model-name' => $modelName, '--model-namespace' => $modelNamespace, '--view-path' => $viewPath, '--route-group' => $routeGroup, '--pagination' => $perPage, '--fields' => $fields, '--validations' => $validations]);
-        $this->call('crud:model', ['name' => $modelNamespace . $modelName, '--fillable' => $fillable, '--table' => $tableName, '--pk' => $primaryKey, '--relationships' => $relationships]);
-        $this->call('crud:migration', ['name' => $migrationName, '--schema' => $fields, '--pk' => $primaryKey, '--indexes' => $indexes, '--foreign-keys' => $foreignKeys]);
-        $this->call('crud:view', ['name' => $name, '--fields' => $fields, '--validations' => $validations, '--view-path' => $viewPath, '--route-group' => $routeGroup, '--localize' => $localize, '--pk' => $primaryKey]);
+        $this->call('crud:controller', [
+            'name'              => $controllerNamespace . $name . 'Controller',
+            '--crud-name'       => $name,
+            '--model-name'      => $modelName,
+            '--model-namespace' => $modelNamespace,
+            '--view-path'       => $viewPath,
+            '--route-group'     => $routeGroup,
+            '--pagination'      => $perPage,
+            '--fields'          => $fields,
+            '--validations'     => $validations,
+        ]);
+        $this->call('crud:model', [
+            'name'            => $modelNamespace . $modelName,
+            '--fillable'      => $fillable,
+            '--table'         => $tableName,
+            '--pk'            => $primaryKey,
+            '--relationships' => $relationships,
+        ]);
+        $this->call('crud:migration', [
+            'name'           => $migrationName,
+            '--schema'       => $fields,
+            '--pk'           => $primaryKey,
+            '--indexes'      => $indexes,
+            '--foreign-keys' => $foreignKeys,
+        ]);
+        $this->call('crud:view', [
+            'name'          => $name,
+            '--fields'      => $fields,
+            '--validations' => $validations,
+            '--view-path'   => $viewPath,
+            '--route-group' => $routeGroup,
+            '--localize'    => $localize,
+            '--pk'          => $primaryKey,
+        ]);
+
         if ($localize == 'yes') {
             $this->call('crud:lang', ['name' => $name, '--fields' => $fields, '--locales' => $locales]);
         }
@@ -191,15 +222,28 @@ class CrudCommand extends Command
         }
 
         $data = json_decode($json);
+        // $required_data = ['routePath'];
 
         foreach ($data as $entry) {
             // each entry is a CRUD
 
-            foreach ($entry as $database) {
-                if (class_exists($database->controller_namespace, $database->name)) {
-                    $this->error("Class " . $database->controller_namespace, $database->name . " does not exists");
+            foreach ($entry as $crud_entry) {
+                if (class_exists($crud_entry->controller_namespace, $crud_entry->name)) {
+                    $this->error("Class " . $crud_entry->controller_namespace, $crud_entry->name . " exists already");
                 } else {
-                    $this->info(print_r($database->name, 1));
+
+                    $this->info("Class " . $crud_entry->controller_namespace, $crud_entry->name . " does not exists...creating it now");
+
+                    $this->info('crud:controller' . print_r([
+                        'name'              => $crud_entry->controller_namespace . $crud_entry->name . 'Controller',
+                        '--crud-name'       => $crud_entry->name,
+                        '--model-name'      => ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name),
+                        '--model-namespace' => ($crud_entry->modelNamespace) ? $crud_entry->modelNamespace : '',
+                        '--view-path'       => ($crud_entry->routePath) ? $crud_entry->routePath : '', //changed it from viewPath to routePath as it made more sense
+                        '--route-group'     => ($crud_entry->routeGroup) ? $crud_entry->routeGroup : '/',
+                        '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : '',
+                        '--fields'          => $fields,
+                        '--validations'     => $validations], 1));
                 }
 
             }
@@ -209,5 +253,35 @@ class CrudCommand extends Command
         // $this->info(print_r($data, 1));
         // log::info(print_r($data->CRUD, 1));
 
+    }
+
+    /**
+     * Processes the new complex json
+     *
+     * @return fieldString
+     * @author bramburn
+     **/
+    protected function ProcessComplexJsonFields($entry)
+    {
+        $fieldsString = '';
+        foreach ($entry as $field) {
+
+            switch ($field->type) {
+                case 'select':
+                    $fieldsString .= $field->name . '#' . $field->type . '#options=' . implode(',', $field->options) . ';';
+                    break;
+                case 'oneToMany':
+                    # code...
+                    break;
+
+                default:
+                    $fieldsString .= $field->name . '#' . $field->type . ';';
+                    break;
+            }
+
+        }
+
+        $fieldsString = rtrim($fieldsString, ';');
+        return $fieldsString;
     }
 }

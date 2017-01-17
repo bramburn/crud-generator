@@ -41,34 +41,34 @@ class CrudViewCommand extends Command
      * @var array
      */
     protected $typeLookup = [
-        'string' => 'text',
-        'char' => 'text',
-        'varchar' => 'text',
-        'text' => 'textarea',
+        'string'     => 'text',
+        'char'       => 'text',
+        'varchar'    => 'text',
+        'text'       => 'textarea',
         'mediumtext' => 'textarea',
-        'longtext' => 'textarea',
-        'json' => 'textarea',
-        'jsonb' => 'textarea',
-        'binary' => 'textarea',
-        'password' => 'password',
-        'email' => 'email',
-        'number' => 'number',
-        'integer' => 'number',
-        'bigint' => 'number',
-        'mediumint' => 'number',
-        'tinyint' => 'number',
-        'smallint' => 'number',
-        'decimal' => 'number',
-        'double' => 'number',
-        'float' => 'number',
-        'date' => 'date',
-        'datetime' => 'datetime-local',
-        'timestamp' => 'datetime-local',
-        'time' => 'time',
-        'boolean' => 'radio',
-        'enum' => 'select',
-        'select' => 'select',
-        'file' => 'file',
+        'longtext'   => 'textarea',
+        'json'       => 'textarea',
+        'jsonb'      => 'textarea',
+        'binary'     => 'textarea',
+        'password'   => 'password',
+        'email'      => 'email',
+        'number'     => 'number',
+        'integer'    => 'number',
+        'bigint'     => 'number',
+        'mediumint'  => 'number',
+        'tinyint'    => 'number',
+        'smallint'   => 'number',
+        'decimal'    => 'number',
+        'double'     => 'number',
+        'float'      => 'number',
+        'date'       => 'date',
+        'datetime'   => 'datetime-local',
+        'timestamp'  => 'datetime-local',
+        'time'       => 'time',
+        'boolean'    => 'radio',
+        'enum'       => 'select',
+        'select'     => 'select',
+        'file'       => 'file',
     ];
 
     /**
@@ -171,9 +171,7 @@ class CrudViewCommand extends Command
     {
         parent::__construct();
 
-        $this->viewDirectoryPath = config('crudgenerator.custom_template')
-        ? config('crudgenerator.path')
-        : __DIR__ . '/../stubs/';
+        $this->viewDirectoryPath = config('crudgenerator.custom_template') ? config('crudgenerator.path') : __DIR__ . '/../stubs/';
 
         if (config('crudgenerator.view_columns_number')) {
             $this->defaultColumnsToShow = config('crudgenerator.view_columns_number');
@@ -187,18 +185,18 @@ class CrudViewCommand extends Command
      */
     public function handle()
     {
-        $this->crudName = strtolower($this->argument('name'));
-        $this->crudNameCap = ucwords($this->crudName);
+        $this->crudName         = strtolower($this->argument('name'));
+        $this->crudNameCap      = ucwords($this->crudName);
         $this->crudNameSingular = str_singular($this->crudName);
-        $this->modelName = str_singular($this->argument('name'));
-        $this->primaryKey = $this->option('pk');
-        $this->routeGroup = ($this->option('route-group')) ? $this->option('route-group') . '/' : $this->option('route-group');
-        $this->viewName = snake_case($this->argument('name'), '-');
+        $this->modelName        = str_singular($this->argument('name'));
+        $this->primaryKey       = $this->option('pk');
+        $this->routeGroup       = ($this->option('route-group')) ? $this->option('route-group') . '/' : $this->option('route-group');
+        $this->viewName         = snake_case($this->argument('name'), '-');
 
         $viewDirectory = config('view.paths')[0] . '/';
         if ($this->option('view-path')) {
             $this->userViewPath = $this->option('view-path');
-            $path = $viewDirectory . $this->userViewPath . '/' . $this->viewName . '/';
+            $path               = $viewDirectory . $this->userViewPath . '/' . $this->viewName . '/';
         } else {
             $path = $viewDirectory . $this->viewName . '/';
         }
@@ -207,7 +205,7 @@ class CrudViewCommand extends Command
             File::makeDirectory($path, 0755, true);
         }
 
-        $fields = $this->option('fields');
+        $fields      = $this->option('fields');
         $fieldsArray = explode(';', $fields);
 
         $this->formFields = [];
@@ -219,17 +217,17 @@ class CrudViewCommand extends Command
             foreach ($fieldsArray as $item) {
                 $itemArray = explode('#', $item);
 
-                $this->formFields[$x]['name'] = trim($itemArray[0]);
-                $this->formFields[$x]['type'] = trim($itemArray[1]);
+                $this->formFields[$x]['name']     = trim($itemArray[0]);
+                $this->formFields[$x]['type']     = trim($itemArray[1]);
                 $this->formFields[$x]['required'] = preg_match('/' . $itemArray[0] . '/', $validations) ? true : false;
 
                 if ($this->formFields[$x]['type'] == 'select' && isset($itemArray[2])) {
-                    $options = trim($itemArray[2]);
-                    $options = str_replace('options=', '', $options);
+                    $options      = trim($itemArray[2]);
+                    $options      = str_replace('options=', '', $options);
                     $optionsArray = explode(',', $options);
 
                     $commaSeparetedString = implode("', '", $optionsArray);
-                    $options = "['" . $commaSeparetedString . "']";
+                    $options              = "['" . $commaSeparetedString . "']";
 
                     $this->formFields[$x]['options'] = $options;
                 }
@@ -261,7 +259,7 @@ class CrudViewCommand extends Command
         }
 
         // For index.blade.php file
-        $indexFile = $this->viewDirectoryPath . 'index.blade.stub';
+        $indexFile    = $this->viewDirectoryPath . 'index.blade.stub';
         $newIndexFile = $path . 'index.blade.php';
         if (!File::copy($indexFile, $newIndexFile)) {
             echo "failed to copy $indexFile...\n";
@@ -270,7 +268,7 @@ class CrudViewCommand extends Command
         }
 
         // For form.blade.php file
-        $formFile = $this->viewDirectoryPath . 'form.blade.stub';
+        $formFile    = $this->viewDirectoryPath . 'form.blade.stub';
         $newFormFile = $path . 'form.blade.php';
         if (!File::copy($formFile, $newFormFile)) {
             echo "failed to copy $formFile...\n";
@@ -279,7 +277,7 @@ class CrudViewCommand extends Command
         }
 
         // For create.blade.php file
-        $createFile = $this->viewDirectoryPath . 'create.blade.stub';
+        $createFile    = $this->viewDirectoryPath . 'create.blade.stub';
         $newCreateFile = $path . 'create.blade.php';
         if (!File::copy($createFile, $newCreateFile)) {
             echo "failed to copy $createFile...\n";
@@ -288,7 +286,7 @@ class CrudViewCommand extends Command
         }
 
         // For edit.blade.php file
-        $editFile = $this->viewDirectoryPath . 'edit.blade.stub';
+        $editFile    = $this->viewDirectoryPath . 'edit.blade.stub';
         $newEditFile = $path . 'edit.blade.php';
         if (!File::copy($editFile, $newEditFile)) {
             echo "failed to copy $editFile...\n";
@@ -297,7 +295,7 @@ class CrudViewCommand extends Command
         }
 
         // For show.blade.php file
-        $showFile = $this->viewDirectoryPath . 'show.blade.stub';
+        $showFile    = $this->viewDirectoryPath . 'show.blade.stub';
         $newShowFile = $path . 'show.blade.php';
         if (!File::copy($showFile, $newShowFile)) {
             echo "failed to copy $showFile...\n";
