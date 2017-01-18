@@ -90,16 +90,7 @@ class CrudCommand extends Command
 
         $foreignKeys = $this->option('foreign-keys');
 
-        $fieldsArray   = explode(';', $fields);
-        $fillableArray = [];
-
-        foreach ($fieldsArray as $item) {
-            $spareParts      = explode('#', trim($item));
-            $fillableArray[] = $spareParts[0];
-        }
-
-        $commaSeparetedString = implode("', '", $fillableArray);
-        $fillable             = "['" . $commaSeparetedString . "']";
+        $fillable = $this->PostProcessFieldsForModels($fields); //new
 
         $localize = $this->option('localize');
         $locales  = $this->option('locales');
@@ -265,8 +256,41 @@ class CrudCommand extends Command
                 '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : 10,
                 '--fields'          => $fields,
                 '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : '']);
+
+            $fillable = $this->PostProcessFieldsForModels($fields);
+
+            // create model
+            $this->call('crud:model', [
+                'name'            => ($crud_entry->$modelNamespace) ? $crud_entry->$modelNamespace : '' . ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name),
+                '--fillable'      => $fillable, //from post process
+                '--table'         => ($crud_entry->tableName) ? $crud_entry->tableName : str_plural(snake_case($crud_entry->name)),
+                '--pk'            => '',
+                '--relationships' => $relationships,
+            ]);
         }
 
+    }
+
+    /**
+     * Processes the fields to Command syntax for crud:model
+     *
+     * @return string
+     * @author bramburn
+     **/
+    protected function PostProcessFieldsForModels($fields)
+    {
+        $fieldsArray   = explode(';', $fields);
+        $fillableArray = [];
+
+        foreach ($fieldsArray as $item) {
+            $spareParts      = explode('#', trim($item));
+            $fillableArray[] = $spareParts[0];
+        }
+
+        $commaSeparetedString = implode("', '", $fillableArray);
+        $fillable             = "['" . $commaSeparetedString . "']";
+
+        return $fillable;
     }
 
     /**
