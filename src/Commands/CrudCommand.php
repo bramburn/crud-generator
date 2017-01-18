@@ -228,32 +228,44 @@ class CrudCommand extends Command
             // each entry is a CRUD
 
             foreach ($entry as $crud_entry) {
-                if (class_exists($crud_entry->controller_namespace, $crud_entry->name)) {
-                    $this->error("Class " . $crud_entry->controller_namespace, $crud_entry->name . " exists already");
-                } else {
-
-                    $this->info("Class " . $crud_entry->controller_namespace, $crud_entry->name . " does not exists...creating it now");
-                    // generating fields
-                    $fields = $this->ProcessComplexJsonFields($crud_entry->data->fields);
-
-                    $this->call('crud:controller', [
-                        'name'              => $crud_entry->controller_namespace . $crud_entry->name . 'Controller',
-                        '--crud-name'       => $crud_entry->name,
-                        '--model-name'      => ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name),
-                        '--model-namespace' => ($crud_entry->modelNamespace) ? $crud_entry->modelNamespace : '',
-                        '--view-path'       => ($crud_entry->viewPath) ? $crud_entry->viewPath : '',
-                        '--route-group'     => ($crud_entry->routeGroup) ? $crud_entry->routeGroup : '',
-                        '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : 10,
-                        '--fields'          => $fields,
-                        '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : '']);
-                }
-
+                $this->CreateControllerFromObj($crud_entry);
             }
 
             // $this->info("Creating CRUD - ".$entry-)
         }
         // $this->info(print_r($data, 1));
         // log::info(print_r($data->CRUD, 1));
+
+    }
+
+    /**
+     * This generates and calls the CRUD:controller
+     *
+     * @return n/a
+     * @author bramburn
+     **/
+    protected function CreateControllerFromObj($crud_entry)
+    {
+
+        if (class_exists($crud_entry->controller_namespace, $crud_entry->name)) {
+            $this->error("Class " . $crud_entry->controller_namespace, $crud_entry->name . " exists already");
+        } else {
+
+            $this->info("Class " . $crud_entry->controller_namespace, $crud_entry->name . " does not exists...creating it now");
+            // generating fields
+            $fields = $this->ProcessComplexJsonFields($crud_entry->data->fields);
+
+            $this->call('crud:controller', [
+                'name'              => $crud_entry->controller_namespace . $crud_entry->name . 'Controller',
+                '--crud-name'       => $crud_entry->name,
+                '--model-name'      => ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name), //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
+                '--model-namespace' => ($crud_entry->modelNamespace) ? $crud_entry->modelNamespace : '', //do we have any namespace for the model?
+                '--view-path'       => ($crud_entry->viewPath) ? $crud_entry->viewPath : '', //this is the view(.xxxx) instead of the route(xxx). I would rather see this have a route than view.
+                '--route-group'     => ($crud_entry->routeGroup) ? $crud_entry->routeGroup : '',
+                '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : 10,
+                '--fields'          => $fields,
+                '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : '']);
+        }
 
     }
 
@@ -273,7 +285,8 @@ class CrudCommand extends Command
                     $fieldsString .= $field->name . '#' . $field->type . '#options=' . implode(',', $field->options) . ';';
                     break;
                 case 'OneToMany':
-                    // don't do anything for now as this needs to be RE-run in a function for now.
+                    // re-run the code to generate another controller
+                    $this->CreateControllerFromObj($field->data);
                     break;
 
                 default:

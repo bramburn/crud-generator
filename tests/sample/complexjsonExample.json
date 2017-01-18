@@ -1,31 +1,57 @@
 {
     "CRUD": [{
-        "name": "testCrud",
-        "data": [{
+        "name": "TestPost",
+        "route": "yes",
+        "viewPath": "testtt",
+        "routeGroup": "",
+        "perPage": "",
+        "controller_namespace": "Test\\",
+        "modelName": "",
+        "modelNamespace": "",
+        "validations": "",
+        "____DBConnection": {
+            "create": "createDB",
+            "read": "readDB",
+            "update": "updateDB",
+            "delete": "deleteDB"
+        },
+        "data": {
             "fields": [{
                 "name": "title",
                 "type": "string",
-                "showform": "yes",
+                "showform": "yes"
             }, {
                 "name": "content",
                 "type": "text",
-                "showform": "yes",
+                "showform": "yes"
             }, {
                 "name": "attachment",
+                "route": "yes",
                 "type": "OneToMany",
                 "addFormToParent": "yes",
                 "database_name": "attachments",
-                "data": [{
-                    "fields": [{
-                        "name": "title",
-                        "type": "string",
-                        "showform": "yes",
-                    }, {
-                        "name": "file",
-                        "type": "file",
-                        "showform": "yes",
-                    }]
-                }]
+                "data": {
+                    "name": "TestAttachments",
+                    "route": "yes",
+                    "viewPath": "",
+                    "routeGroup": "",
+                    "perPage": "",
+                    "controller_namespace": "Test\\Attachments\\",
+                    "modelName": "post_attachments",
+                    "modelNamespace": "",
+                    "validations": "",
+                    "data": {
+                        "fields": [{
+                            "name": "title",
+                            "type": "string",
+                            "showform": "yes"
+                        }, {
+                            "name": "file",
+                            "type": "file",
+                            "showform": "yes"
+                        }]
+                    }
+                }
             }, {
                 "name": "view",
                 "type": "integer",
@@ -34,16 +60,25 @@
                 "name": "comments",
                 "type": "OneToMany",
                 "addFormToParent": "yes",
-                "database_name": "testComments",
-                "data": [{
-                    "fields": [{
-                        "name": "comment",
-                        "type": "text",
-                        "showform": "yes"
-                    }]
-                }]
+                "database_name": "TestComments",
+                "data": {
+                    "name": "comments",
+                    "route": "yes",
+                    "viewPath": "",
+                    "routeGroup": "",
+                    "perPage": "",
+                    "controller_namespace": "Test\\Comments\\",
+                    "modelName": "post_attachments",
+                    "modelNamespace": "",
+                    "data": {
+                        "fields": [{
+                            "name": "comment",
+                            "type": "text",
+                            "showform": "yes"
+                        }]
+                    }
+                }
             }]
-        }]
-    }],
-    
+        }
+    }]
 }
