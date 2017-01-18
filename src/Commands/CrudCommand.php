@@ -247,11 +247,11 @@ class CrudCommand extends Command
     protected function CreateControllerFromObj($crud_entry)
     {
 
-        if (class_exists($crud_entry->controller_namespace, $crud_entry->name)) {
-            $this->error("Class " . $crud_entry->controller_namespace, $crud_entry->name . " exists already");
+        if (class_exists($crud_entry->controller_namespace . $crud_entry->name)) {
+            $this->error("Class " . $crud_entry->controller_namespace . $crud_entry->name . " exists already");
         } else {
 
-            $this->info("Class " . $crud_entry->controller_namespace, $crud_entry->name . " does not exists...creating it now");
+            $this->info("Class " . $crud_entry->controller_namespace . $crud_entry->name . " does not exists...creating it now");
             // generating fields
             $fields = $this->ProcessComplexJsonFields($crud_entry->data->fields);
 

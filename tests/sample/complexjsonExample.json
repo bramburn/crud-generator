@@ -36,7 +36,7 @@
                     "viewPath": "",
                     "routeGroup": "",
                     "perPage": "",
-                    "controller_namespace": "Test\\Attachments\\",
+                    "controller_namespace": "Test\\",
                     "modelName": "post_attachments",
                     "modelNamespace": "",
                     "validations": "",
@@ -67,7 +67,7 @@
                     "viewPath": "",
                     "routeGroup": "",
                     "perPage": "",
-                    "controller_namespace": "Test\\Comments\\",
+                    "controller_namespace": "Test\\",
                     "modelName": "post_attachments",
                     "modelNamespace": "",
                     "data": {
