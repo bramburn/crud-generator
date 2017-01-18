@@ -13,7 +13,7 @@ class CrudControllerCommand extends GeneratorCommand
      */
     protected $signature = 'crud:controller
                             {name : The name of the controler.}
-                            {--crud-name= : The name of the Crud.}
+                            {--crud-name= : The name of the CRUD.}
                             {--model-name= : The name of the Model.}
                             {--model-namespace= : The namespace of the Model.}
                             {--view-path= : The name of the view path.}
