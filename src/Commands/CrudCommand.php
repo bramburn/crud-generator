@@ -240,16 +240,24 @@ class CrudCommand extends Command
     protected function CreateControllerFromObj($crud_entry)
     {
 
-        if (class_exists($crud_entry->controller_namespace . $crud_entry->name)) {
-            $this->error("Class " . $crud_entry->controller_namespace . $crud_entry->name . " exists already");
+        $currentControllerClass = $crud_entry->controller_namespace . $crud_entry->name; //this is the full path of the class, we'll check if it exists first! if not we stop.
+        $currentModelClass      = $crud_entry->modelNamespace . $crud_entry->modelName; //this is the full path of the model class, we'll check if it exists too!
+
+        /**
+         * @todo: split this function for controller, model, view, migration so that it can be easily ran one by one
+         *
+         */
+
+        if (class_exists($currentControllerClass)) {
+            $this->error("Class " . $currentControllerClass . " exists already");
         } else {
 
-            $this->info("Class " . $crud_entry->controller_namespace . $crud_entry->name . " does not exists...creating it now");
+            $this->info("Class " . $currentControllerClass . " does not exists...creating it now");
             // generating fields
             $fields = $this->ProcessComplexJsonFields($crud_entry->data->fields);
 
             $this->call('crud:controller', [
-                'name'              => $crud_entry->controller_namespace . $crud_entry->name . 'Controller', //this is the fullpath and name of the controller including the namespace
+                'name'              => $currentControllerClass . 'Controller', //this is the fullpath and name of the controller including the namespace
                 '--crud-name'       => $crud_entry->name, //name of the
                 '--model-name'      => ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name), //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
                 '--model-namespace' => ($crud_entry->modelNamespace) ? $crud_entry->modelNamespace : '', //do we have any namespace for the model?
@@ -269,6 +277,8 @@ class CrudCommand extends Command
                 '--pk'            => '',
                 '--relationships' => $relationships,
             ]);
+
+            // add the resource to the route/web
         }
 
     }

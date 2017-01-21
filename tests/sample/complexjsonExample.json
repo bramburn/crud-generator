@@ -3,11 +3,12 @@
         "name": "TestPost",
         "route": "yes",
         "viewPath": "testtt",
-        "routeGroup": "",
+        "routePath": "",
         "perPage": "",
         "controller_namespace": "Test\\",
+        "tableName": "TestPostCustomTablename",
         "modelName": "",
-        "modelNamespace": "",
+        "modelNamespace": "Testmodel\\",
         "validations": "",
         "____DBConnection": {
             "create": "createDB",
@@ -25,20 +26,21 @@
                 "type": "text",
                 "showform": "yes"
             }, {
-                "name": "attachment",
+                "name": "TestAttachments",
                 "route": "yes",
                 "type": "OneToMany",
                 "addFormToParent": "yes",
-                "database_name": "attachments",
+                "database_name": "TestAttachments",
                 "data": {
                     "name": "TestAttachments",
                     "route": "yes",
-                    "viewPath": "",
-                    "routeGroup": "",
+                    "viewPath": "testtt",
+                    "routePath": "",
                     "perPage": "",
                     "controller_namespace": "Test\\",
-                    "modelName": "post_attachments",
-                    "modelNamespace": "",
+                    "tableName": "",
+                    "modelName": "",
+                    "modelNamespace": "Testmodel\\",
                     "validations": "",
                     "data": {
                         "fields": [{
@@ -57,19 +59,21 @@
                 "type": "integer",
                 "showform": "no"
             }, {
-                "name": "comments",
+                "name": "TestComments",
                 "type": "OneToMany",
                 "addFormToParent": "yes",
                 "database_name": "TestComments",
                 "data": {
-                    "name": "comments",
+                    "name": "TestComments",
                     "route": "yes",
-                    "viewPath": "",
-                    "routeGroup": "",
+                    "viewPath": "testtt",
+                    "routePath": "",
                     "perPage": "",
                     "controller_namespace": "Test\\",
-                    "modelName": "post_attachments",
-                    "modelNamespace": "",
+                    "tableName": "",
+                    "modelName": "",
+                    "modelNamespace": "Testmodel\\",
+                    "validations": "",
                     "data": {
                         "fields": [{
                             "name": "comment",
