@@ -258,11 +258,11 @@ class CrudCommand extends Command
 
             $this->call('crud:controller', [
                 'name'              => $currentControllerClass . 'Controller', //this is the fullpath and name of the controller including the namespace
-                '--crud-name'       => $crud_entry->name, //name of the
+                '--crud-name'       => $crud_entry->name, //name of the CRUD, filename and classname (this does not include the namespace)
                 '--model-name'      => ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name), //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
                 '--model-namespace' => ($crud_entry->modelNamespace) ? $crud_entry->modelNamespace : '', //do we have any namespace for the model?
                 '--view-path'       => rtrim(($crud_entry->viewPath) ? $crud_entry->viewPath : '', '/'), //this is the view folder location /resources/views/xxxx it needs to remove any trailing slash.... if blank it will be saved directly in /resourves/views/{here}
-                '--route-path'      => ($crud_entry->routePath) ? $crud_entry->routePath : '', //this is the routePath/?
+                '--route-path'      => ($crud_entry->routePath) ? $crud_entry->routePath : '', //Prefix of the route, it is the path to your CRUD. It does not include the file name, just the structured path.
                 '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : 10,
                 '--fields'          => $fields,
                 '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : '']);

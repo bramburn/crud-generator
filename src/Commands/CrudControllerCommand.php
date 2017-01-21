@@ -69,18 +69,19 @@ class CrudControllerCommand extends GeneratorCommand
      */
     protected function buildClass($fullNameSpaceName)
     {
+        // Get the template for the controller
         $stub = $this->files->get($this->getStub());
 
-        $viewPath         = $this->option('view-path') ? $this->option('view-path') . '.' : ''; //this is the view path; the end path of this is the 'resoureces/views/...' then if the CRUD has a routePath
-        $crudName         = strtolower($this->option('crud-name'));
-        $crudNameSingular = str_singular($crudName);
-        $modelName        = $this->option('model-name'); //class name of the model to call
-        $modelNamespace   = $this->option('model-namespace'); //namespace of the MODEL this is going to be used at the beginning of the stub
-        $routePath        = ($this->option('route-path')) ? $this->option('route-path') . '/' : '';
-        $perPage          = intval($this->option('pagination'));
-        $viewName         = snake_case($this->option('crud-name'), '-');
-        $fields           = $this->option('fields');
-        $validations      = rtrim($this->option('validations'), ';');
+        $viewPath            = $this->option('view-path') ? $this->option('view-path') . '.' : ''; //this is the view path; the end path of this is the 'resoureces/views/...' then if the CRUD has a routePath
+        $crudName            = strtolower($this->option('crud-name')); //Class name and CRUD
+        $crudNameSingular    = str_singular($crudName);
+        $modelName           = $this->option('model-name'); //class name of the model to call
+        $modelNamespace      = $this->option('model-namespace'); //namespace of the MODEL this is going to be used at the beginning of the stub
+        $routePath           = ($this->option('route-path')) ? $this->option('route-path') . '/' : '';
+        $perPage             = intval($this->option('pagination'));
+        $viewContainerFolder = snake_case($this->option('crud-name'), '-'); //this is not really a name of the file but the folder in which the create, edit, show, index live.
+        $fields              = $this->option('fields');
+        $validations         = rtrim($this->option('validations'), ';');
 
         $validationRules = '';
         if (trim($validations) != '') {
@@ -131,7 +132,7 @@ EOD;
 
         return $this->replaceNamespace($stub, $fullNameSpaceName)
             ->replaceViewPath($stub, $viewPath)
-            ->replaceViewName($stub, $viewName)
+            ->replaceviewContainerFolder($stub, $viewContainerFolder)
             ->replaceCrudName($stub, $crudName)
             ->replaceCrudNameSingular($stub, $crudNameSingular)
             ->replaceModelName($stub, $modelName)
@@ -144,17 +145,17 @@ EOD;
     }
 
     /**
-     * Replace the viewName fo the given stub.
+     * Replace the viewContainerFolder fo the given stub.
      *
      * @param string $stub
-     * @param string $viewName
+     * @param string $viewContainerFolder
      *
      * @return $this
      */
-    protected function replaceViewName(&$stub, $viewName)
+    protected function replaceviewContainerFolder(&$stub, $viewContainerFolder)
     {
         $stub = str_replace(
-            '{{viewName}}', $viewName, $stub
+            '{{viewContainerFolder}}', $viewContainerFolder, $stub
         );
 
         return $this;

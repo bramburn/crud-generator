@@ -132,7 +132,7 @@ class CrudViewCommand extends Command
      *
      * @var string
      */
-    protected $viewName = '';
+    protected $viewContainerFolder = '';
 
     /**
      * Name or prefix of the Route Group.
@@ -185,20 +185,20 @@ class CrudViewCommand extends Command
      */
     public function handle()
     {
-        $this->crudName         = strtolower($this->argument('name'));
-        $this->crudNameCap      = ucwords($this->crudName);
-        $this->crudNameSingular = str_singular($this->crudName);
-        $this->modelName        = str_singular($this->argument('name'));
-        $this->primaryKey       = $this->option('pk');
-        $this->routePath        = ($this->option('route-path')) ? $this->option('route-path') . '/' : $this->option('route-path');
-        $this->viewName         = snake_case($this->argument('name'), '-');
+        $this->crudName            = strtolower($this->argument('name'));
+        $this->crudNameCap         = ucwords($this->crudName);
+        $this->crudNameSingular    = str_singular($this->crudName);
+        $this->modelName           = str_singular($this->argument('name'));
+        $this->primaryKey          = $this->option('pk');
+        $this->routePath           = ($this->option('route-path')) ? $this->option('route-path') . '/' : $this->option('route-path');
+        $this->viewContainerFolder = snake_case($this->argument('name'), '-');
 
         $viewDirectory = config('view.paths')[0] . '/';
         if ($this->option('view-path')) {
             $this->userViewPath = $this->option('view-path');
-            $path               = $viewDirectory . $this->userViewPath . '/' . $this->viewName . '/';
+            $path               = $viewDirectory . $this->userViewPath . '/' . $this->viewContainerFolder . '/';
         } else {
-            $path = $viewDirectory . $this->viewName . '/';
+            $path = $viewDirectory . $this->viewContainerFolder . '/';
         }
 
         if (!File::isDirectory($path)) {
@@ -320,7 +320,7 @@ class CrudViewCommand extends Command
         File::put($newIndexFile, str_replace('%%crudName%%', $this->crudName, File::get($newIndexFile)));
         File::put($newIndexFile, str_replace('%%crudNameCap%%', $this->crudNameCap, File::get($newIndexFile)));
         File::put($newIndexFile, str_replace('%%modelName%%', $this->modelName, File::get($newIndexFile)));
-        File::put($newIndexFile, str_replace('%%viewName%%', $this->viewName, File::get($newIndexFile)));
+        File::put($newIndexFile, str_replace('%%viewContainerFolder%%', $this->viewContainerFolder, File::get($newIndexFile)));
         File::put($newIndexFile, str_replace('%%routePath%%', $this->routePath, File::get($newIndexFile)));
         File::put($newIndexFile, str_replace('%%primaryKey%%', $this->primaryKey, File::get($newIndexFile)));
     }
@@ -346,12 +346,12 @@ class CrudViewCommand extends Command
      */
     public function templateCreateVars($newCreateFile)
     {
-        $viewTemplateDir = isset($this->userViewPath) ? $this->userViewPath . '.' . $this->viewName : $this->viewName;
+        $viewTemplateDir = isset($this->userViewPath) ? $this->userViewPath . '.' . $this->viewContainerFolder : $this->viewContainerFolder;
 
         File::put($newCreateFile, str_replace('%%crudName%%', $this->crudName, File::get($newCreateFile)));
         File::put($newCreateFile, str_replace('%%crudNameCap%%', $this->crudNameCap, File::get($newCreateFile)));
         File::put($newCreateFile, str_replace('%%modelName%%', $this->modelName, File::get($newCreateFile)));
-        File::put($newCreateFile, str_replace('%%viewName%%', $this->viewName, File::get($newCreateFile)));
+        File::put($newCreateFile, str_replace('%%viewContainerFolder%%', $this->viewContainerFolder, File::get($newCreateFile)));
         File::put($newCreateFile, str_replace('%%routePath%%', $this->routeGroup, File::get($newCreateFile)));
         File::put($newCreateFile, str_replace('%%viewTemplateDir%%', $viewTemplateDir, File::get($newCreateFile)));
     }
@@ -365,13 +365,13 @@ class CrudViewCommand extends Command
      */
     public function templateEditVars($newEditFile)
     {
-        $viewTemplateDir = isset($this->userViewPath) ? $this->userViewPath . '.' . $this->viewName : $this->viewName;
+        $viewTemplateDir = isset($this->userViewPath) ? $this->userViewPath . '.' . $this->viewContainerFolder : $this->viewContainerFolder;
 
         File::put($newEditFile, str_replace('%%crudName%%', $this->crudName, File::get($newEditFile)));
         File::put($newEditFile, str_replace('%%crudNameSingular%%', $this->crudNameSingular, File::get($newEditFile)));
         File::put($newEditFile, str_replace('%%crudNameCap%%', $this->crudNameCap, File::get($newEditFile)));
         File::put($newEditFile, str_replace('%%modelName%%', $this->modelName, File::get($newEditFile)));
-        File::put($newEditFile, str_replace('%%viewName%%', $this->viewName, File::get($newEditFile)));
+        File::put($newEditFile, str_replace('%%viewContainerFolder%%', $this->viewContainerFolder, File::get($newEditFile)));
         File::put($newEditFile, str_replace('%%routeGroup%%', $this->routeGroup, File::get($newEditFile)));
         File::put($newEditFile, str_replace('%%primaryKey%%', $this->primaryKey, File::get($newEditFile)));
         File::put($newEditFile, str_replace('%%viewTemplateDir%%', $viewTemplateDir, File::get($newEditFile)));
@@ -393,7 +393,7 @@ class CrudViewCommand extends Command
         File::put($newShowFile, str_replace('%%crudNameCap%%', $this->crudNameCap, File::get($newShowFile)));
         File::put($newShowFile, str_replace('%%modelName%%', $this->modelName, File::get($newShowFile)));
         File::put($newShowFile, str_replace('%%primaryKey%%', $this->primaryKey, File::get($newShowFile)));
-        File::put($newShowFile, str_replace('%%viewName%%', $this->viewName, File::get($newShowFile)));
+        File::put($newShowFile, str_replace('%%viewContainerFolder%%', $this->viewContainerFolder, File::get($newShowFile)));
         File::put($newShowFile, str_replace('%%routeGroup%%', $this->routeGroup, File::get($newShowFile)));
     }
 
