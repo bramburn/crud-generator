@@ -16,7 +16,7 @@ class CrudViewCommand extends Command
                             {name : The name of the Crud.}
                             {--fields= : The fields name for the form.}
                             {--view-path= : The name of the view path.}
-                            {--route-group= : Prefix of the route group.}
+                            {--route-path= : Prefix of the route, it is path to the CRUD}
                             {--pk=id : The name of the primary key.}
                             {--validations= : Validation details for the fields.}
                             {--localize=no : Localize the view? yes|no.}';
@@ -139,7 +139,7 @@ class CrudViewCommand extends Command
      *
      * @var string
      */
-    protected $routeGroup = '';
+    protected $routePath = '';
 
     /**
      * Html of the form heading.
@@ -190,7 +190,7 @@ class CrudViewCommand extends Command
         $this->crudNameSingular = str_singular($this->crudName);
         $this->modelName        = str_singular($this->argument('name'));
         $this->primaryKey       = $this->option('pk');
-        $this->routeGroup       = ($this->option('route-group')) ? $this->option('route-group') . '/' : $this->option('route-group');
+        $this->routePath        = ($this->option('route-path')) ? $this->option('route-path') . '/' : $this->option('route-path');
         $this->viewName         = snake_case($this->argument('name'), '-');
 
         $viewDirectory = config('view.paths')[0] . '/';
@@ -321,7 +321,7 @@ class CrudViewCommand extends Command
         File::put($newIndexFile, str_replace('%%crudNameCap%%', $this->crudNameCap, File::get($newIndexFile)));
         File::put($newIndexFile, str_replace('%%modelName%%', $this->modelName, File::get($newIndexFile)));
         File::put($newIndexFile, str_replace('%%viewName%%', $this->viewName, File::get($newIndexFile)));
-        File::put($newIndexFile, str_replace('%%routeGroup%%', $this->routeGroup, File::get($newIndexFile)));
+        File::put($newIndexFile, str_replace('%%routePath%%', $this->routePath, File::get($newIndexFile)));
         File::put($newIndexFile, str_replace('%%primaryKey%%', $this->primaryKey, File::get($newIndexFile)));
     }
 
@@ -352,7 +352,7 @@ class CrudViewCommand extends Command
         File::put($newCreateFile, str_replace('%%crudNameCap%%', $this->crudNameCap, File::get($newCreateFile)));
         File::put($newCreateFile, str_replace('%%modelName%%', $this->modelName, File::get($newCreateFile)));
         File::put($newCreateFile, str_replace('%%viewName%%', $this->viewName, File::get($newCreateFile)));
-        File::put($newCreateFile, str_replace('%%routeGroup%%', $this->routeGroup, File::get($newCreateFile)));
+        File::put($newCreateFile, str_replace('%%routePath%%', $this->routeGroup, File::get($newCreateFile)));
         File::put($newCreateFile, str_replace('%%viewTemplateDir%%', $viewTemplateDir, File::get($newCreateFile)));
     }
 

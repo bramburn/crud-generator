@@ -26,7 +26,7 @@ class CrudCommand extends Command
                             {--foreign-keys= : The foreign keys for the table.}
                             {--relationships= : The relationships for the model.}
                             {--route=yes : Include Crud route to routes.php? yes|no.}
-                            {--route-group= : Prefix of the route group.}
+                            {--route-path= : Prefix of the route group.}
                             {--view-path= : The name of the view path.}
                             {--localize=no : Allow to localize? yes|no.}
                             {--locales=en : Locales language type.}';
@@ -39,7 +39,7 @@ class CrudCommand extends Command
     protected $description = 'Generate Crud including controller, model, views & migrations.';
 
     /** @var string  */
-    protected $routeName = '';
+    protected $FinalRouteName = '';
 
     /** @var string  */
     protected $controller = '';
@@ -66,15 +66,16 @@ class CrudCommand extends Command
         $migrationName = str_plural(snake_case($name));
         $tableName     = $migrationName;
 
+        // Starts complex Json
         if ($this->option('complexjson')) {
             $this->ProcessComplexJson($this->option('complexjson'));
             $this->info('running boss mode');
             exit();
         }
 
-        $routeGroup      = $this->option('route-group');
-        $this->routeName = ($routeGroup) ? $routeGroup . '/' . snake_case($name, '-') : snake_case($name, '-');
-        $perPage         = intval($this->option('pagination'));
+        $routePath            = $this->option('route-path'); //changed route-group to route-path as it makes sense...
+        $this->FinalRouteName = ($routePath) ? $routePath . '/' . snake_case($name, '-') : snake_case($name, '-'); //this is the Final route path and name. This is what you put in your URL browser to get to this CRUD.
+        $perPage              = intval($this->option('pagination'));
 
         $controllerNamespace = ($this->option('controller-namespace')) ? $this->option('controller-namespace') . '\\' : '';
         $modelNamespace      = ($this->option('model-namespace')) ? trim($this->option('model-namespace')) . '\\' : '';
@@ -106,7 +107,7 @@ class CrudCommand extends Command
             '--model-name'      => $modelName,
             '--model-namespace' => $modelNamespace,
             '--view-path'       => $viewPath,
-            '--route-group'     => $routeGroup,
+            '--route-path'      => $routePath,
             '--pagination'      => $perPage,
             '--fields'          => $fields,
             '--validations'     => $validations,
@@ -130,7 +131,7 @@ class CrudCommand extends Command
             '--fields'      => $fields,
             '--validations' => $validations,
             '--view-path'   => $viewPath,
-            '--route-group' => $routeGroup,
+            '--route-path'  => $routePath,
             '--localize'    => $localize,
             '--pk'          => $primaryKey,
         ]);
@@ -155,6 +156,7 @@ class CrudCommand extends Command
 
             if ($isAdded) {
                 $this->info('Crud/Resource route added to ' . $routeFile);
+                $this->info('Your Route is ' . $this->FinalRouteName);
             } else {
                 $this->info('Unable to add the route to ' . $routeFile);
             }
@@ -168,7 +170,7 @@ class CrudCommand extends Command
      */
     protected function addRoutes()
     {
-        return ["Route::resource('" . $this->routeName . "', '" . $this->controller . "');"];
+        return ["Route::resource('" . $this->FinalRouteName . "', '" . $this->controller . "');"];
     }
 
     /**
@@ -247,12 +249,12 @@ class CrudCommand extends Command
             $fields = $this->ProcessComplexJsonFields($crud_entry->data->fields);
 
             $this->call('crud:controller', [
-                'name'              => $crud_entry->controller_namespace . $crud_entry->name . 'Controller',
+                'name'              => $crud_entry->controller_namespace . $crud_entry->name . 'Controller', //this is the fullpath and name of the controller
                 '--crud-name'       => $crud_entry->name,
                 '--model-name'      => ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name), //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
                 '--model-namespace' => ($crud_entry->modelNamespace) ? $crud_entry->modelNamespace : '', //do we have any namespace for the model?
-                '--view-path'       => ($crud_entry->viewPath) ? $crud_entry->viewPath : '', //this is the view(.xxxx) instead of the route(xxx). I would rather see this have a route than view.
-                '--route-group'     => ($crud_entry->routeGroup) ? $crud_entry->routeGroup : '',
+                '--view-path'       => rtrim(($crud_entry->viewPath) ? $crud_entry->viewPath : '', '/'), //this is the view folder location /resources/views/xxxx it needs to remove any trailing slash.... if blank it will be saved directly in /resourves/views/{here}
+                '--route-path'      => ($crud_entry->routePath) ? $crud_entry->routePath : '', //this is the routePath/?
                 '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : 10,
                 '--fields'          => $fields,
                 '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : '']);

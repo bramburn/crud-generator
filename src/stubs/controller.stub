@@ -2,10 +2,8 @@
 
 namespace DummyNamespace;
 
-use DummyRootNamespaceHttp\Requests;
 use DummyRootNamespaceHttp\Controllers\Controller;
 
-use DummyRootNamespace{{modelNamespace}}{{modelName}};
 use Illuminate\Http\Request;
 use Session;
 
@@ -44,12 +42,11 @@ class DummyClass extends Controller
     {
         {{validationRules}}
         $requestData = $request->all();
-        {{fileSnippet}}
-        {{modelName}}::create($requestData);
+        {{fileSnippet}}{{modelName}}::create($requestData);
 
         Session::flash('flash_message', '{{modelName}} added!');
 
-        return redirect('{{routeGroup}}{{viewName}}');
+        return redirect('{{routePath}}{{viewName}}');
     }
 
     /**
@@ -98,7 +95,7 @@ class DummyClass extends Controller
 
         Session::flash('flash_message', '{{modelName}} updated!');
 
-        return redirect('{{routeGroup}}{{viewName}}');
+        return redirect('{{routePath}}{{viewName}}');
     }
 
     /**
@@ -114,6 +111,6 @@ class DummyClass extends Controller
 
         Session::flash('flash_message', '{{modelName}} deleted!');
 
-        return redirect('{{routeGroup}}{{viewName}}');
+        return redirect('{{routePath}}{{viewName}}');
     }
 }

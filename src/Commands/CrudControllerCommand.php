@@ -19,7 +19,7 @@ class CrudControllerCommand extends GeneratorCommand
                             {--view-path= : The name of the view path.}
                             {--fields= : Fields name for the form & migration.}
                             {--validations= : Validation details for the fields.}
-                            {--route-group= : Prefix of the route group.}
+                            {--route-path= : Prefix of the route, it is the path to your CRUD}
                             {--pagination=25 : The amount of models per page for index pages.}';
 
     /**
@@ -71,12 +71,12 @@ class CrudControllerCommand extends GeneratorCommand
     {
         $stub = $this->files->get($this->getStub());
 
-        $viewPath         = $this->option('view-path') ? $this->option('view-path') . '.' : '';
+        $viewPath         = $this->option('view-path') ? $this->option('view-path') . '.' : ''; //this is the view path; the end path of this is the 'resoureces/views/...' then if the CRUD has a routePath
         $crudName         = strtolower($this->option('crud-name'));
         $crudNameSingular = str_singular($crudName);
         $modelName        = $this->option('model-name');
         $modelNamespace   = $this->option('model-namespace');
-        $routeGroup       = ($this->option('route-group')) ? $this->option('route-group') . '/' : '';
+        $routePath        = ($this->option('route-path')) ? $this->option('route-path') . '/' : '';
         $perPage          = intval($this->option('pagination'));
         $viewName         = snake_case($this->option('crud-name'), '-');
         $fields           = $this->option('fields');
@@ -136,7 +136,7 @@ EOD;
             ->replaceCrudNameSingular($stub, $crudNameSingular)
             ->replaceModelName($stub, $modelName)
             ->replaceModelNamespace($stub, $modelNamespace)
-            ->replaceRouteGroup($stub, $routeGroup)
+            ->replaceroutePath($stub, $routePath)
             ->replaceValidationRules($stub, $validationRules)
             ->replacePaginationNumber($stub, $perPage)
             ->replaceFileSnippet($stub, $fileSnippet)
@@ -246,17 +246,17 @@ EOD;
     }
 
     /**
-     * Replace the routeGroup for the given stub.
+     * Replace the routePath for the given stub.
      *
      * @param  string  $stub
-     * @param  string  $routeGroup
+     * @param  string  $routePath
      *
      * @return $this
      */
-    protected function replaceRouteGroup(&$stub, $routeGroup)
+    protected function replaceroutePath(&$stub, $routePath)
     {
         $stub = str_replace(
-            '{{routeGroup}}', $routeGroup, $stub
+            '{{routePath}}', $routePath, $stub
         );
 
         return $this;

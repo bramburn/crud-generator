@@ -16,7 +16,7 @@
                             </ul>
                         @endif
 
-                        {!! Form::open(['url' => '/%%routeGroup%%%%viewName%%', 'class' => 'form-horizontal', 'files' => true]) !!}
+                        {!! Form::open(['url' => '/%%routePath%%%%viewName%%', 'class' => 'form-horizontal', 'files' => true]) !!}
 
                         @include ('%%viewTemplateDir%%.form')
 
