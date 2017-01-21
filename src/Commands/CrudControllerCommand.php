@@ -12,7 +12,7 @@ class CrudControllerCommand extends GeneratorCommand
      * @var string
      */
     protected $signature = 'crud:controller
-                            {name : The name of the controler.}
+                            {name : The name of the controler including the Namespace.}
                             {--crud-name= : The name of the CRUD.}
                             {--model-name= : The name of the Model.}
                             {--model-namespace= : The namespace of the Model.}
@@ -63,11 +63,11 @@ class CrudControllerCommand extends GeneratorCommand
     /**
      * Build the model class with the given name.
      *
-     * @param  string  $name
+     * @param  string  $fullNameSpaceName
      *
      * @return string
      */
-    protected function buildClass($name)
+    protected function buildClass($fullNameSpaceName)
     {
         $stub = $this->files->get($this->getStub());
 
@@ -129,7 +129,7 @@ EOD;
             }
         }
 
-        return $this->replaceNamespace($stub, $name)
+        return $this->replaceNamespace($stub, $fullNameSpaceName)
             ->replaceViewPath($stub, $viewPath)
             ->replaceViewName($stub, $viewName)
             ->replaceCrudName($stub, $crudName)
@@ -140,7 +140,7 @@ EOD;
             ->replaceValidationRules($stub, $validationRules)
             ->replacePaginationNumber($stub, $perPage)
             ->replaceFileSnippet($stub, $fileSnippet)
-            ->replaceClass($stub, $name);
+            ->replaceClass($stub, $fullNameSpaceName);
     }
 
     /**

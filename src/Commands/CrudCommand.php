@@ -249,8 +249,8 @@ class CrudCommand extends Command
             $fields = $this->ProcessComplexJsonFields($crud_entry->data->fields);
 
             $this->call('crud:controller', [
-                'name'              => $crud_entry->controller_namespace . $crud_entry->name . 'Controller', //this is the fullpath and name of the controller
-                '--crud-name'       => $crud_entry->name,
+                'name'              => $crud_entry->controller_namespace . $crud_entry->name . 'Controller', //this is the fullpath and name of the controller including the namespace
+                '--crud-name'       => $crud_entry->name, //name of the
                 '--model-name'      => ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name), //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
                 '--model-namespace' => ($crud_entry->modelNamespace) ? $crud_entry->modelNamespace : '', //do we have any namespace for the model?
                 '--view-path'       => rtrim(($crud_entry->viewPath) ? $crud_entry->viewPath : '', '/'), //this is the view folder location /resources/views/xxxx it needs to remove any trailing slash.... if blank it will be saved directly in /resourves/views/{here}
