@@ -62,6 +62,8 @@ class CrudControllerCommand extends GeneratorCommand
 
     /**
      * Build the model class with the given name.
+     * This is called from Illuminate\Console\GeneratorCommand::fire();
+     * This class is overwritting the one in Illumuninate\Console\
      *
      * @param  string  $fullNameSpaceName
      *
@@ -130,18 +132,18 @@ EOD;
             }
         }
 
-        return $this->replaceNamespace($stub, $fullNameSpaceName)
-            ->replaceViewPath($stub, $viewPath)
-            ->replaceviewContainerFolder($stub, $viewContainerFolder)
-            ->replaceCrudName($stub, $crudName)
-            ->replaceCrudNameSingular($stub, $crudNameSingular)
-            ->replaceModelName($stub, $modelName)
-            ->replaceModelNamespace($stub, $modelNamespace)
-            ->replaceroutePath($stub, $routePath)
-            ->replaceValidationRules($stub, $validationRules)
-            ->replacePaginationNumber($stub, $perPage)
-            ->replaceFileSnippet($stub, $fileSnippet)
-            ->replaceClass($stub, $fullNameSpaceName);
+        return $this->replaceNamespace($stub, $fullNameSpaceName) //called in Illuminiate\Console\GeneratorCommand
+            ->replaceViewPath($stub, $viewPath) //Called in this class
+            ->replaceviewContainerFolder($stub, $viewContainerFolder) //Called in this class
+            ->replaceCrudName($stub, $crudName) //Called in this class
+            ->replaceCrudNameSingular($stub, $crudNameSingular) //Called in this class
+            ->replaceModelName($stub, $modelName) //Called in this class
+            ->replaceModelNamespace($stub, $modelNamespace) //Called in this class
+            ->replaceroutePath($stub, $routePath) //Called in this class
+            ->replaceValidationRules($stub, $validationRules) //Called in this class
+            ->replacePaginationNumber($stub, $perPage) //Called in this class
+            ->replaceFileSnippet($stub, $fileSnippet) //Called in this class
+            ->replaceClass($stub, $fullNameSpaceName); //called in Illuminiate\Console\GeneratorCommand
     }
 
     /**
