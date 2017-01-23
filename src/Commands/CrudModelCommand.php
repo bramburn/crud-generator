@@ -66,9 +66,9 @@ class CrudModelCommand extends GeneratorCommand
     {
         $stub = $this->files->get($this->getStub());
 
-        $table = $this->option('table') ?: $this->argument('name');
-        $fillable = $this->option('fillable');
-        $primaryKey = $this->option('pk');
+        $table         = $this->option('table') ?: $this->argument('name');
+        $fillable      = $this->option('fillable');
+        $primaryKey    = $this->option('pk');
         $relationships = trim($this->option('relationships')) != '' ? explode(',', trim($this->option('relationships'))) : [];
 
         if (!empty($primaryKey)) {
@@ -99,7 +99,7 @@ EOD;
             }
 
             // blindly wrap each arg in single quotes
-            $args = explode('|', trim($parts[2]));
+            $args       = explode('|', trim($parts[2]));
             $argsString = '';
             foreach ($args as $k => $v) {
                 if (trim($v) == '') {
@@ -184,7 +184,7 @@ EOD;
             . "return \$this->" . $relationshipType . "(" . $argsString . ");"
             . "\n\t}";
 
-        $str = '{{relationships}}';
+        $str  = '{{relationships}}';
         $stub = str_replace($str, $code . "\n\t$str", $stub);
 
         return $this;

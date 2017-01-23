@@ -66,75 +66,78 @@ class CrudCommand extends Command
         $migrationName = str_plural(snake_case($name));
         $tableName     = $migrationName;
 
+        $routePath            = $this->option('route-path'); //changed route-group to route-path as it makes sense...
+        $this->FinalRouteName = ($routePath) ? $routePath . '/' . snake_case($name, '-') : snake_case($name, '-'); //this is the Final route path and name. This is what you put in your URL browser to get to this CRUD.
+
         // Starts complex Json
+
         if ($this->option('complexjson')) {
             $this->ProcessComplexJson($this->option('complexjson'));
             $this->info('running boss mode');
-            exit();
+
+        } else {
+
+            $perPage = intval($this->option('pagination'));
+
+            $controllerNamespace = ($this->option('controller-namespace')) ? $this->option('controller-namespace') . '\\' : '';
+            $modelNamespace      = ($this->option('model-namespace')) ? trim($this->option('model-namespace')) . '\\' : '';
+
+            $fields = rtrim($this->option('fields'), ';');
+
+            if ($this->option('fields_from_file')) {
+                $fields = $this->processJSONFields($this->option('fields_from_file'));
+            }
+
+            $primaryKey = $this->option('pk');
+            $viewPath   = $this->option('view-path');
+
+            $foreignKeys = $this->option('foreign-keys');
+
+            $fillable = $this->PostProcessFieldsForModels($fields); //new
+
+            $localize = $this->option('localize');
+            $locales  = $this->option('locales');
+
+            $indexes       = $this->option('indexes');
+            $relationships = $this->option('relationships');
+
+            $validations = trim($this->option('validations'));
+
+            $this->call('crud:controller', [
+                'name'              => $controllerNamespace . $name . 'Controller',
+                '--crud-name'       => $name,
+                '--model-name'      => $modelName,
+                '--model-namespace' => $modelNamespace,
+                '--view-path'       => $viewPath,
+                '--route-path'      => $routePath,
+                '--pagination'      => $perPage,
+                '--fields'          => $fields,
+                '--validations'     => $validations,
+            ]);
+            $this->call('crud:model', [
+                'name'            => $modelNamespace . $modelName,
+                '--fillable'      => $fillable,
+                '--table'         => $tableName,
+                '--pk'            => $primaryKey,
+                '--relationships' => $relationships,
+            ]);
+            $this->call('crud:migration', [
+                'name'           => $migrationName,
+                '--schema'       => $fields,
+                '--pk'           => $primaryKey,
+                '--indexes'      => $indexes,
+                '--foreign-keys' => $foreignKeys,
+            ]);
+            $this->call('crud:view', [
+                'name'          => $name,
+                '--fields'      => $fields,
+                '--validations' => $validations,
+                '--view-path'   => $viewPath,
+                '--route-path'  => $routePath,
+                '--localize'    => $localize,
+                '--pk'          => $primaryKey,
+            ]);
         }
-
-        $routePath            = $this->option('route-path'); //changed route-group to route-path as it makes sense...
-        $this->FinalRouteName = ($routePath) ? $routePath . '/' . snake_case($name, '-') : snake_case($name, '-'); //this is the Final route path and name. This is what you put in your URL browser to get to this CRUD.
-        $perPage              = intval($this->option('pagination'));
-
-        $controllerNamespace = ($this->option('controller-namespace')) ? $this->option('controller-namespace') . '\\' : '';
-        $modelNamespace      = ($this->option('model-namespace')) ? trim($this->option('model-namespace')) . '\\' : '';
-
-        $fields = rtrim($this->option('fields'), ';');
-
-        if ($this->option('fields_from_file')) {
-            $fields = $this->processJSONFields($this->option('fields_from_file'));
-        }
-
-        $primaryKey = $this->option('pk');
-        $viewPath   = $this->option('view-path');
-
-        $foreignKeys = $this->option('foreign-keys');
-
-        $fillable = $this->PostProcessFieldsForModels($fields); //new
-
-        $localize = $this->option('localize');
-        $locales  = $this->option('locales');
-
-        $indexes       = $this->option('indexes');
-        $relationships = $this->option('relationships');
-
-        $validations = trim($this->option('validations'));
-
-        $this->call('crud:controller', [
-            'name'              => $controllerNamespace . $name . 'Controller',
-            '--crud-name'       => $name,
-            '--model-name'      => $modelName,
-            '--model-namespace' => $modelNamespace,
-            '--view-path'       => $viewPath,
-            '--route-path'      => $routePath,
-            '--pagination'      => $perPage,
-            '--fields'          => $fields,
-            '--validations'     => $validations,
-        ]);
-        $this->call('crud:model', [
-            'name'            => $modelNamespace . $modelName,
-            '--fillable'      => $fillable,
-            '--table'         => $tableName,
-            '--pk'            => $primaryKey,
-            '--relationships' => $relationships,
-        ]);
-        $this->call('crud:migration', [
-            'name'           => $migrationName,
-            '--schema'       => $fields,
-            '--pk'           => $primaryKey,
-            '--indexes'      => $indexes,
-            '--foreign-keys' => $foreignKeys,
-        ]);
-        $this->call('crud:view', [
-            'name'          => $name,
-            '--fields'      => $fields,
-            '--validations' => $validations,
-            '--view-path'   => $viewPath,
-            '--route-path'  => $routePath,
-            '--localize'    => $localize,
-            '--pk'          => $primaryKey,
-        ]);
 
         if ($localize == 'yes') {
             $this->call('crud:lang', ['name' => $name, '--fields' => $fields, '--locales' => $locales]);
@@ -232,16 +235,47 @@ class CrudCommand extends Command
     }
 
     /**
+     * This processes the crud entry to generate the model
+     *
+     * @return N/A
+     * @author bramburn (icelabz.co.uk)
+     **/
+    protected function CreateModelFromObj($crud_entry)
+    {
+        $currentModelClass = $crud_entry->modelNamespace . $crud_entry->modelName; //this is the full path of the model class, we'll check if it exists too!
+
+        if (class_exists($currentModelClass)) {
+            $this->error("Model " . $currentModelClass . " exists already");
+        } else {
+
+            $this->info("Model " . $currentModelClass . " does not exists...creating it now");
+            // generating fields
+            $fields   = $this->ProcessComplexJsonFields($crud_entry->data->fields);
+            $fillable = $this->PostProcessFieldsForModels($fields);
+
+            // create model
+            $this->call('crud:model', [
+                'name'            => ($currentModelClass) ? $currentModelClass : '' . ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name),
+                '--fillable'      => $fillable, //from post process
+                '--table'         => ($crud_entry->tableName) ? $crud_entry->tableName : str_plural(snake_case($crud_entry->name)),
+                '--pk'            => '',
+                '--relationships' => $crud_entry->relationships, //this needs a bit of working
+            ]);
+
+            // add the resource to the route/web
+        }
+    }
+
+    /**
      * This generates and calls the CRUD:controller
      *
      * @return n/a
-     * @author bramburn
+     * @author bramburn (icelabz.co.uk)
      **/
     protected function CreateControllerFromObj($crud_entry)
     {
 
         $currentControllerClass = $crud_entry->controller_namespace . $crud_entry->name; //this is the full path of the class, we'll check if it exists first! if not we stop.
-        $currentModelClass      = $crud_entry->modelNamespace . $crud_entry->modelName; //this is the full path of the model class, we'll check if it exists too!
 
         /**
          * @todo: split this function for controller, model, view, migration so that it can be easily ran one by one
@@ -267,18 +301,6 @@ class CrudCommand extends Command
                 '--fields'          => $fields,
                 '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : '']);
 
-            $fillable = $this->PostProcessFieldsForModels($fields);
-
-            // create model
-            $this->call('crud:model', [
-                'name'            => ($crud_entry->$modelNamespace) ? $crud_entry->$modelNamespace : '' . ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name),
-                '--fillable'      => $fillable, //from post process
-                '--table'         => ($crud_entry->tableName) ? $crud_entry->tableName : str_plural(snake_case($crud_entry->name)),
-                '--pk'            => '',
-                '--relationships' => $relationships,
-            ]);
-
-            // add the resource to the route/web
         }
 
     }
