@@ -2,20 +2,16 @@
     "CRUD": [{
         "name": "TestPost",
         "route": "yes",
-        "viewPath": "testtt",
+        "viewPath": "TestBox",
         "routePath": "",
         "perPage": "",
         "controller_namespace": "Test\\",
-        "tableName": "TestPostCustomTablename",
-        "modelName": "",
         "modelNamespace": "Testmodel\\",
         "validations": "",
-        "____DBConnection": {
-            "create": "createDB",
-            "read": "readDB",
-            "update": "updateDB",
-            "delete": "deleteDB"
-        },
+        "relationships": "",
+        "primaryKey":"",
+        "indices":"",
+        "foreignKeys":"",
         "data": {
             "fields": [{
                 "name": "title",
@@ -34,14 +30,16 @@
                 "data": {
                     "name": "TestAttachments",
                     "route": "yes",
-                    "viewPath": "testtt",
+                    "viewPath": "TestBox",
                     "routePath": "",
                     "perPage": "",
                     "controller_namespace": "Test\\",
-                    "tableName": "",
-                    "modelName": "",
                     "modelNamespace": "Testmodel\\",
                     "validations": "",
+                    "relationships": "",
+                    "primaryKey":"",
+                    "indices":"",
+                     "foreignKeys":"",
                     "data": {
                         "fields": [{
                             "name": "title",
@@ -66,14 +64,16 @@
                 "data": {
                     "name": "TestComments",
                     "route": "yes",
-                    "viewPath": "testtt",
+                    "viewPath": "TestBox",
                     "routePath": "",
                     "perPage": "",
                     "controller_namespace": "Test\\",
-                    "tableName": "",
-                    "modelName": "",
                     "modelNamespace": "Testmodel\\",
                     "validations": "",
+                    "relationships": "",
+                    "primaryKey":"",
+                    "indices":"",
+                     "foreignKeys":"",
                     "data": {
                         "fields": [{
                             "name": "comment",

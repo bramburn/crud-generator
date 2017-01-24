@@ -6,6 +6,7 @@ namespace DummyNamespace;
 
 use DummyRootNamespaceHttp\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\{{modelNamespace}}{{modelName}};
 use Session;
 
 class DummyClass extends Controller
