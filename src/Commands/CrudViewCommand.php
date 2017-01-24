@@ -352,7 +352,7 @@ class CrudViewCommand extends Command
         File::put($newCreateFile, str_replace('%%crudNameCap%%', $this->crudNameCap, File::get($newCreateFile)));
         File::put($newCreateFile, str_replace('%%modelName%%', $this->modelName, File::get($newCreateFile)));
         File::put($newCreateFile, str_replace('%%viewContainerFolder%%', $this->viewContainerFolder, File::get($newCreateFile)));
-        File::put($newCreateFile, str_replace('%%routePath%%', $this->routeGroup, File::get($newCreateFile)));
+        File::put($newCreateFile, str_replace('%%routePath%%', $this->routePath, File::get($newCreateFile)));
         File::put($newCreateFile, str_replace('%%viewTemplateDir%%', $viewTemplateDir, File::get($newCreateFile)));
     }
 
@@ -372,7 +372,7 @@ class CrudViewCommand extends Command
         File::put($newEditFile, str_replace('%%crudNameCap%%', $this->crudNameCap, File::get($newEditFile)));
         File::put($newEditFile, str_replace('%%modelName%%', $this->modelName, File::get($newEditFile)));
         File::put($newEditFile, str_replace('%%viewContainerFolder%%', $this->viewContainerFolder, File::get($newEditFile)));
-        File::put($newEditFile, str_replace('%%routeGroup%%', $this->routeGroup, File::get($newEditFile)));
+        File::put($newEditFile, str_replace('%%routePath%%', $this->routePath, File::get($newEditFile)));
         File::put($newEditFile, str_replace('%%primaryKey%%', $this->primaryKey, File::get($newEditFile)));
         File::put($newEditFile, str_replace('%%viewTemplateDir%%', $viewTemplateDir, File::get($newEditFile)));
     }
@@ -394,7 +394,7 @@ class CrudViewCommand extends Command
         File::put($newShowFile, str_replace('%%modelName%%', $this->modelName, File::get($newShowFile)));
         File::put($newShowFile, str_replace('%%primaryKey%%', $this->primaryKey, File::get($newShowFile)));
         File::put($newShowFile, str_replace('%%viewContainerFolder%%', $this->viewContainerFolder, File::get($newShowFile)));
-        File::put($newShowFile, str_replace('%%routeGroup%%', $this->routeGroup, File::get($newShowFile)));
+        File::put($newShowFile, str_replace('%%routePath%%', $this->routePath, File::get($newShowFile)));
     }
 
     /**

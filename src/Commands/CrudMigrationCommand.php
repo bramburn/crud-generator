@@ -14,9 +14,10 @@ class CrudMigrationCommand extends GeneratorCommand
     protected $signature = 'crud:migration
                             {name : The name of the migration.}
                             {--schema= : The name of the schema.}
-                            {--indexes= : The fields to add an index too.}
+                            {--indices= : The fields to add an index too.}
                             {--foreign-keys= : Foreign keys.}
-                            {--pk=id : The name of the primary key.}';
+                            {--pk=id : The name of the primary key.}
+                            {--dateprefix= : A Custom Date Prefix.}';
 
     /**
      * The console command description.
@@ -84,7 +85,7 @@ class CrudMigrationCommand extends GeneratorCommand
     protected function getPath($name)
     {
         $name       = str_replace($this->laravel->getNamespace(), '', $name);
-        $datePrefix = date('Y_m_d_His');
+        $datePrefix = ($this->option('dateprefix')) ? $this->option('dateprefix') : date('Y_m_d_His');
 
         return database_path('/migrations/') . $datePrefix . '_create_' . $name . '_table.php';
     }
@@ -103,7 +104,7 @@ class CrudMigrationCommand extends GeneratorCommand
         $tableName = $this->argument('name');
         $className = 'Create' . str_replace(' ', '', ucwords(str_replace('_', ' ', $tableName))) . 'Table';
 
-        $fieldsToIndex = trim($this->option('indexes')) != '' ? explode(',', $this->option('indexes')) : [];
+        $fieldsToIndex = trim($this->option('indices')) != '' ? explode(',', $this->option('indices')) : [];
         $foreignKeys   = trim($this->option('foreign-keys')) != '' ? explode(',', $this->option('foreign-keys')) : [];
 
         $schema = rtrim($this->option('schema'), ';');
@@ -153,7 +154,7 @@ class CrudMigrationCommand extends GeneratorCommand
             $schemaFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
         }
 
-        // add indexes and unique indexes as necessary
+        // add indices and unique indices as necessary
         foreach ($fieldsToIndex as $fldData) {
             $line = trim($fldData);
 
@@ -192,22 +193,20 @@ class CrudMigrationCommand extends GeneratorCommand
             if (count($parts) == 3) {
                 $schemaFields .= "\$table->foreign('" . trim($parts[0]) . "')"
                 . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')";
+                $schemaFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
             } elseif (count($parts) == 4) {
                 $schemaFields .= "\$table->foreign('" . trim($parts[0]) . "')"
                 . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')"
                 . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[3]) . "')";
+                $schemaFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
             } elseif (count($parts) == 5) {
                 $schemaFields .= "\$table->foreign('" . trim($parts[0]) . "')"
                 . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')"
                 . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[4]) . "')";
+                $schemaFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
             } else {
                 continue;
             }
-
-            $schemaFields .= "\$table->foreign('" . trim($parts[0]) . "')"
-            . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')";
-
-            $schemaFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
 
         }
 

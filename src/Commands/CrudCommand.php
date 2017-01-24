@@ -22,7 +22,7 @@ class CrudCommand extends Command
                             {--model-namespace= : Namespace of the model inside "app" dir.}
                             {--pk=id : The name of the primary key.}
                             {--pagination=25 : The amount of models per page for index pages.}
-                            {--indexes= : The fields to add an index to.}
+                            {--indices= : The fields to add an index to.}
                             {--foreign-keys= : The foreign keys for the table.}
                             {--relationships= : The relationships for the model.}
                             {--route=yes : Include Crud route to routes.php? yes|no.}
@@ -43,6 +43,8 @@ class CrudCommand extends Command
 
     /** @var string  */
     protected $controller = '';
+
+    protected $bufferedCalls = array();
 
     /**
      * Create a new command instance.
@@ -71,13 +73,10 @@ class CrudCommand extends Command
 
         // Starts complex Json
 
-        $this->info('Running Complex Json...');
-        $this->ProcessComplexJson($this->option('complexjson'));
-        exit();
-
         if ($this->option('complexjson')) {
             $this->info('Running Complex Json...');
             $this->ProcessComplexJson($this->option('complexjson'));
+            $this->FinaliseCalls();
 
         } else {
 
@@ -102,7 +101,7 @@ class CrudCommand extends Command
             $localize = $this->option('localize');
             $locales  = $this->option('locales');
 
-            $indexes       = $this->option('indexes');
+            $indices       = $this->option('indices');
             $relationships = $this->option('relationships');
 
             $validations = trim($this->option('validations'));
@@ -129,7 +128,7 @@ class CrudCommand extends Command
                 'name'           => $migrationName,
                 '--schema'       => $fields,
                 '--pk'           => $primaryKey,
-                '--indexes'      => $indexes,
+                '--indices'      => $indices,
                 '--foreign-keys' => $foreignKeys,
             ]);
             $this->call('crud:view', [
@@ -145,11 +144,23 @@ class CrudCommand extends Command
             if ($localize == 'yes') {
                 $this->call('crud:lang', ['name' => $name, '--fields' => $fields, '--locales' => $locales]);
             }
-        }
-        exit();
 
-        // For optimizing the class loader
-        $this->callSilent('optimize');
+            // For optimizing the class loader
+            $this->callSilent('optimize');
+            $_controllerName = ($controllerNamespace != '') ? $controllerNamespace . '\\' . $name . 'Controller' : $name . 'Controller';
+            $this->ProcessRoute($_controllerName, $this->FinalRouteName);
+        }
+
+    }
+
+    /**
+     * undocumented function
+     *
+     * @return void
+     * @author
+     **/
+    protected function ProcessRoute($_controllerName, $FinalRouteName)
+    {
 
         // Updating the Http/routes.php file
         $routeFile = app_path('Http/routes.php');
@@ -159,27 +170,16 @@ class CrudCommand extends Command
         }
 
         if (file_exists($routeFile) && (strtolower($this->option('route')) === 'yes')) {
-            $this->controller = ($controllerNamespace != '') ? $controllerNamespace . '\\' . $name . 'Controller' : $name . 'Controller';
 
-            $isAdded = File::append($routeFile, "\n" . implode("\n", $this->addRoutes()));
+            $isAdded = File::append($routeFile, "\n" . "Route::resource('" . $FinalRouteName . "', '" . $_controllerName . "');");
 
             if ($isAdded) {
                 $this->info('Crud/Resource route added to ' . $routeFile);
-                $this->info('Your Route is ' . $this->FinalRouteName);
+                $this->info('Your Route is ' . $FinalRouteName);
             } else {
                 $this->info('Unable to add the route to ' . $routeFile);
             }
         }
-    }
-
-    /**
-     * Add routes.
-     *
-     * @return  array
-     */
-    protected function addRoutes()
-    {
-        return ["Route::resource('" . $this->FinalRouteName . "', '" . $this->controller . "');"];
     }
 
     /**
@@ -249,7 +249,7 @@ class CrudCommand extends Command
      * @return array
      * @author bramburn (icelabz.co.uk)
      **/
-    protected function PreProcessMainData($dataset)
+    protected function PreProcessMainData($dataset, $fieldsToAdd = null, $belongsTo = "", $foreignKeyToAdd = "")
     {
 
         $to_check = [
@@ -259,29 +259,181 @@ class CrudCommand extends Command
             "routePath",
             "perPage",
             "controller_namespace",
-            "tableName",
             "modelNamespace",
-            "modelName",
             "validations",
             "relationships",
+            "primaryKey",
+            "indices",
+            "foreignKeys",
         ];
+
+        //Set Model Name
+
+        $dataset->modelName       = str_singular($dataset->name);
+        $dataset->migrationName   = str_plural(snake_case($dataset->name));
+        $dataset->tableName       = $dataset->migrationName;
+        $dataset->controllerClass = $dataset->controller_namespace . $dataset->name . "Controller";
+        $dataset->modelClass      = $dataset->modelNamespace . $dataset->modelName;
+        $dataset->primaryKey      = ($dataset->primaryKey) ? $dataset->primaryKey : 'id';
+        $dataset->viewPath        = rtrim(($dataset->viewPath) ? $dataset->viewPath : '', '/');
+        $dataset->FinalRouteName  = ($dataset->routePath) ? $dataset->routePath . '/' . snake_case($dataset->name, '-') : snake_case($dataset->name, '-');
 
         foreach ($to_check as $key) {
             if (isset($dataset->$key)) {
-                $this->info("Found " . $key . ' with');
+                $this->info("Found " . $key);
             } else {
                 $this->error("Cannot find " . $key);
             }
 
         }
 
+        $relationshipString = "";
+        if (!is_null($fieldsToAdd)) {
+            array_push($dataset->data->fields, (object) $fieldsToAdd);
+        }
+
+        // check fields
+        foreach ($dataset->data->fields as $field) {
+            if ($field->type == "OneToMany") {
+                $this->info("Found a childset " . $field->name);
+
+                // creates belongs to
+                $parentid = str_singular($dataset->name) . "_id";
+
+                $_fieldToAdd = (object) [
+                    "name"     => $parentid,
+                    "type"     => "integer",
+                    "showform" => "no",
+                    "modifier" => 'unsigned',
+                ];
+                $fk               = str_singular($dataset->name) . "_id";
+                $_belongsTo       = str_singular($dataset->name) . '#belongsTo#App\\' . $dataset->modelClass . '|' . $fk . '|id';
+                $foreignKeyString = $fk . '#id#' . $dataset->tableName . '#cascade#cascade';
+
+                $this->PreProcessMainData($field->data, $_fieldToAdd, $_belongsTo, $foreignKeyString);
+                // add hasMany
+                $relationshipString .= str_plural($field->data->name) . '#hasMany#App\\' . $field->data->modelNamespace . $field->data->modelName . '|' . $fk . '|id,';
+
+                $this->info("continue.... ");
+            } else {
+                $this->info("Field:: " . $field->name . ' :: ' . $field->type);
+            }
+
+        }
+
+        // Finalise relationship Strings
+        $dataset->relationships = rtrim($relationshipString . $belongsTo . $dataset->relationships, ',');
+        $dataset->foreignKeys   = rtrim($foreignKeyToAdd . $dataset->foreignKeys, ',');
+
+        // Check Classes
+
+        $classToCheck = [
+
+            $dataset->controllerClass,
+            $dataset->modelNamespace . $dataset->modelName,
+        ];
+
+        foreach ($classToCheck as $class) {
+            if (class_exists($class)) {
+                $this->error("Class " . $class . " exists already");
+            } else {
+
+                $this->info("Class " . $class . " does not exists...");
+            }
+        }
+
+        if (file_exists('resources/views/' . $dataset->viewPath)) {
+            $this->error("File resources/views/ " . $dataset->viewPath . " Exists!");
+        }
+
+        $fields   = $this->ProcessComplexJsonFields($dataset->data->fields); //if there are any child fields it will run Create
+        $fillable = $this->PostProcessFieldsForModels($fields);
+
+        $this->info('Fields ::::: ' . $fields);
+        $this->info('fillable ::::: ' . $fillable);
+
+        // $choice = $this->anticipate('Do you want to proceed?', ['Yes', 'No']);
+        $this->info('create controller ' . $dataset->controllerClass);
+
+        $this->BufferCalls('crud:controller', [
+            'name'              => $dataset->controllerClass, //this is the fullpath and name+Controller suffix of the controller including the namespace
+            '--crud-name'       => $dataset->name, //name of the CRUD, filename and classname (this does not include the namespace)
+            '--model-name'      => ($dataset->modelName) ? $dataset->modelName : str_singular($dataset->name), //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
+            '--model-namespace' => ($dataset->modelNamespace) ? $dataset->modelNamespace : '', //do we have any namespace for the model?
+            '--view-path'       => $dataset->viewPath, //this is the view folder location /resources/views/xxxx it needs to remove any trailing slash.... if blank it will be saved directly in /resourves/views/{here}
+            '--route-path'      => ($dataset->routePath) ? $dataset->routePath : '', //Prefix of the route, it is the path to your CRUD. It does not include the file name, just the structured path.
+            '--pagination'      => ($dataset->perPage) ? $dataset->perPage : 10,
+            '--fields'          => $fields,
+            '--validations'     => ($dataset->validations) ? $dataset->validations : '']);
+
+        $this->BufferCalls('crud:model', [
+            'name'            => $dataset->modelClass,
+            '--fillable'      => $fillable, //from post process
+            '--table'         => $dataset->tableName,
+            '--pk'            => '',
+            '--relationships' => $dataset->relationships, //this needs a bit of working
+        ]);
+
+        $this->BufferCalls('crud:migration', [
+            'name'           => $dataset->migrationName,
+            '--schema'       => $fields,
+            '--pk'           => $dataset->primaryKey,
+            '--indices'      => $dataset->indices,
+            '--foreign-keys' => $dataset->foreignKeys,
+        ]);
+
+        $this->BufferCalls('crud:view', [
+            'name'          => $dataset->name,
+            '--fields'      => $fields,
+            '--validations' => $dataset->validations,
+            '--view-path'   => $dataset->viewPath,
+            '--route-path'  => ($dataset->routePath) ? $dataset->routePath : '',
+            '--localize'    => "no",
+            '--pk'          => $dataset->primaryKey,
+        ]);
+
+        $this->ProcessRoute($dataset->controllerClass, $dataset->FinalRouteName);
+
+    }
+
+/**
+ * Finish off the calls in one go
+ *
+ * @return output
+ * @author bramburn (icelabz.co.uk)
+ **/
+    protected function FinaliseCalls()
+    {
+        krsort($this->bufferedCalls);
+
+        foreach ($this->bufferedCalls as $key => $value) {
+
+            if ($value[0] == 'crud:migration') {
+                $value[1]['--dateprefix'] = date('Y_m_d_His', strtotime("-" . $key . " sec"));
+            }
+
+            $this->call($value[0], $value[1]);
+        }
+        $this->callSilent('optimize');
+
+    }
+
+    /**
+     * delays the call to sequence it properly
+     *
+     * @return array
+     * @author bramburn (icelabz.co.uk)
+     **/
+    public function BufferCalls($call, $data)
+    {
+        $this->bufferedCalls[] = [$call, $data];
     }
 
     /**
      * undocumented function
      *
      * @return void
-     * @author
+     * @author bramburn (icelabz.co.uk)
      **/
     protected function PreProcessFields($crud_entry)
     {
@@ -396,12 +548,13 @@ class CrudCommand extends Command
                     break;
                 case 'OneToMany':
                     // re-run the code to generate another controller
-                    $this->CreateControllerFromObj($field->data);
-                    $this->CreateModelFromObj($field->data);
+                    // $this->CreateControllerFromObj($field->data);
+                    // $this->CreateModelFromObj($field->data);
                     break;
 
                 default:
-                    $fieldsString .= $field->name . '#' . $field->type . ';';
+                    $modifier = (isset($field->modifier)) ? '#' . $field->modifier : '';
+                    $fieldsString .= $field->name . '#' . $field->type . $modifier . ';';
                     break;
             }
 
