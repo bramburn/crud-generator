@@ -71,9 +71,13 @@ class CrudCommand extends Command
 
         // Starts complex Json
 
+        $this->info('Running Complex Json...');
+        $this->ProcessComplexJson($this->option('complexjson'));
+        exit();
+
         if ($this->option('complexjson')) {
+            $this->info('Running Complex Json...');
             $this->ProcessComplexJson($this->option('complexjson'));
-            $this->info('running boss mode');
 
         } else {
 
@@ -137,11 +141,13 @@ class CrudCommand extends Command
                 '--localize'    => $localize,
                 '--pk'          => $primaryKey,
             ]);
-        }
 
-        if ($localize == 'yes') {
-            $this->call('crud:lang', ['name' => $name, '--fields' => $fields, '--locales' => $locales]);
+            if ($localize == 'yes') {
+                $this->call('crud:lang', ['name' => $name, '--fields' => $fields, '--locales' => $locales]);
+            }
         }
+        exit();
+
         // For optimizing the class loader
         $this->callSilent('optimize');
 
@@ -217,14 +223,17 @@ class CrudCommand extends Command
             $this->error("File does not exists");
         }
 
+        // decode the JSON
+
         $data = json_decode($json);
-        // $required_data = ['routePath'];
 
         foreach ($data as $entry) {
             // each entry is a CRUD
 
             foreach ($entry as $crud_entry) {
-                $this->CreateControllerFromObj($crud_entry);
+                // $this->CreateControllerFromObj($crud_entry); // only creates the Controller Commands
+                // $this->CreateModelFromObj($crud_entry); // only creates the Model commands
+                $this->PreProcessMainData($crud_entry);
             }
 
             // $this->info("Creating CRUD - ".$entry-)
@@ -232,6 +241,54 @@ class CrudCommand extends Command
         // $this->info(print_r($data, 1));
         // log::info(print_r($data->CRUD, 1));
 
+    }
+
+    /**
+     * This checks and validates the main data set
+     *
+     * @return array
+     * @author bramburn (icelabz.co.uk)
+     **/
+    protected function PreProcessMainData($dataset)
+    {
+
+        $to_check = [
+            "name",
+            "route",
+            "viewPath",
+            "routePath",
+            "perPage",
+            "controller_namespace",
+            "tableName",
+            "modelNamespace",
+            "modelName",
+            "validations",
+            "relationships",
+        ];
+
+        foreach ($to_check as $key) {
+            if (isset($dataset->$key)) {
+                $this->info("Found " . $key . ' with');
+            } else {
+                $this->error("Cannot find " . $key);
+            }
+
+        }
+
+    }
+
+    /**
+     * undocumented function
+     *
+     * @return void
+     * @author
+     **/
+    protected function PreProcessFields($crud_entry)
+    {
+        $fields   = $this->ProcessComplexJsonFields($crud_entry->data->fields); //if there are any child fields it will run Create
+        $fillable = $this->PostProcessFieldsForModels($fields);
+
+        return [$fields, $fillable];
     }
 
     /**
@@ -250,7 +307,7 @@ class CrudCommand extends Command
 
             $this->info("Model " . $currentModelClass . " does not exists...creating it now");
             // generating fields
-            $fields   = $this->ProcessComplexJsonFields($crud_entry->data->fields);
+            $fields   = $this->ProcessComplexJsonFields($crud_entry->data->fields); //if there are any child fields it will run Create
             $fillable = $this->PostProcessFieldsForModels($fields);
 
             // create model
@@ -277,21 +334,16 @@ class CrudCommand extends Command
 
         $currentControllerClass = $crud_entry->controller_namespace . $crud_entry->name; //this is the full path of the class, we'll check if it exists first! if not we stop.
 
-        /**
-         * @todo: split this function for controller, model, view, migration so that it can be easily ran one by one
-         *
-         */
-
         if (class_exists($currentControllerClass)) {
-            $this->error("Class " . $currentControllerClass . " exists already");
+            $this->error("Controller " . $currentControllerClass . " exists already");
         } else {
 
-            $this->info("Class " . $currentControllerClass . " does not exists...creating it now");
+            $this->info("Controller " . $currentControllerClass . " does not exists...creating it now");
             // generating fields
             $fields = $this->ProcessComplexJsonFields($crud_entry->data->fields);
 
             $this->call('crud:controller', [
-                'name'              => $currentControllerClass . 'Controller', //this is the fullpath and name of the controller including the namespace
+                'name'              => $currentControllerClass . 'Controller', //this is the fullpath and name+Controller suffix of the controller including the namespace
                 '--crud-name'       => $crud_entry->name, //name of the CRUD, filename and classname (this does not include the namespace)
                 '--model-name'      => ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name), //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
                 '--model-namespace' => ($crud_entry->modelNamespace) ? $crud_entry->modelNamespace : '', //do we have any namespace for the model?
@@ -345,6 +397,7 @@ class CrudCommand extends Command
                 case 'OneToMany':
                     // re-run the code to generate another controller
                     $this->CreateControllerFromObj($field->data);
+                    $this->CreateModelFromObj($field->data);
                     break;
 
                 default:
