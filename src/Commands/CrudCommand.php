@@ -44,7 +44,13 @@ class CrudCommand extends Command
     /** @var string  */
     protected $controller = '';
 
+/** @var array  */
     protected $bufferedCalls = array();
+
+    // config = test mode
+    protected $testMode = false;
+
+    protected $complexCRUD;
 
     /**
      * Create a new command instance.
@@ -54,6 +60,7 @@ class CrudCommand extends Command
     public function __construct()
     {
         parent::__construct();
+
     }
 
     /**
@@ -75,6 +82,9 @@ class CrudCommand extends Command
 
         if ($this->option('complexjson')) {
             $this->info('Running Complex Json...');
+
+            $this->complexCRUD = new \Appzcoder\CrudGenerator\shared\CRUDcomplexClass();
+
             $this->ProcessComplexJson($this->option('complexjson'));
             $this->FinaliseCalls();
 
@@ -249,7 +259,7 @@ class CrudCommand extends Command
      * @return array
      * @author bramburn (icelabz.co.uk)
      **/
-    protected function PreProcessMainData($dataset, $fieldsToAdd = null, $belongsTo = "", $foreignKeyToAdd = "")
+    protected function PreProcessMainData($dataset, $parentArray = array(), $fieldsToAdd = null, $belongsTo = "", $foreignKeyToAdd = "")
     {
 
         $to_check = [
@@ -273,10 +283,14 @@ class CrudCommand extends Command
         $dataset->migrationName   = str_plural(snake_case($dataset->name));
         $dataset->tableName       = $dataset->migrationName;
         $dataset->controllerClass = $dataset->controller_namespace . $dataset->name . "Controller";
-        $dataset->modelClass      = $dataset->modelNamespace . $dataset->modelName;
         $dataset->primaryKey      = ($dataset->primaryKey) ? $dataset->primaryKey : 'id';
         $dataset->viewPath        = rtrim(($dataset->viewPath) ? $dataset->viewPath : '', '/');
         $dataset->FinalRouteName  = ($dataset->routePath) ? $dataset->routePath . '/' . snake_case($dataset->name, '-') : snake_case($dataset->name, '-');
+        $dataset->routePath       = ($dataset->routePath) ? $dataset->routePath : '';
+        $dataset->modelName       = ($dataset->modelName) ? $dataset->modelName : str_singular($dataset->name);
+        $dataset->modelNamespace  = ($dataset->modelNamespace) ? $dataset->modelNamespace : '';
+        $dataset->modelClass      = $dataset->modelNamespace . $dataset->modelName;
+        $viewContainerFolder      = snake_case($dataset->name, '-');
 
         foreach ($to_check as $key) {
             if (isset($dataset->$key)) {
@@ -301,16 +315,23 @@ class CrudCommand extends Command
                 $parentid = str_singular($dataset->name) . "_id";
 
                 $_fieldToAdd = (object) [
-                    "name"     => $parentid,
-                    "type"     => "integer",
-                    "showform" => "no",
-                    "modifier" => 'unsigned',
+                    "name"        => $parentid,
+                    "type"        => "integer",
+                    "showform"    => "no",
+                    "showInIndex" => "no",
+                    "modifier"    => 'unsigned',
                 ];
                 $fk               = str_singular($dataset->name) . "_id";
                 $_belongsTo       = str_singular($dataset->name) . '#belongsTo#App\\' . $dataset->modelClass . '|' . $fk . '|id';
                 $foreignKeyString = $fk . '#id#' . $dataset->tableName . '#cascade#cascade';
 
-                $this->PreProcessMainData($field->data, $_fieldToAdd, $_belongsTo, $foreignKeyString);
+                // send parent data through to the child class
+                $_parentArray = [
+                    'parent_modelClass' => $dataset->modelClass, //namespance + class name
+
+                ];
+
+                $this->PreProcessMainData($field->data, $_parentArray, $_fieldToAdd, $_belongsTo, $foreignKeyString);
                 // add hasMany
                 $relationshipString .= str_plural($field->data->name) . '#hasMany#App\\' . $field->data->modelNamespace . $field->data->modelName . '|' . $fk . '|id,';
 
@@ -346,8 +367,8 @@ class CrudCommand extends Command
             $this->error("File resources/views/ " . $dataset->viewPath . " Exists!");
         }
 
-        $fields   = $this->ProcessComplexJsonFields($dataset->data->fields); //if there are any child fields it will run Create
-        $fillable = $this->PostProcessFieldsForModels($fields);
+        list($fields, $FieldArray) = $this->ProcessComplexJsonFields($dataset->data->fields); //if there are any child fields it will run Create
+        $fillable                  = $this->PostProcessFieldsForModels($fields);
 
         $this->info('Fields ::::: ' . $fields);
         $this->info('fillable ::::: ' . $fillable);
@@ -355,44 +376,67 @@ class CrudCommand extends Command
         // $choice = $this->anticipate('Do you want to proceed?', ['Yes', 'No']);
         $this->info('create controller ' . $dataset->controllerClass);
 
-        $this->BufferCalls('crud:controller', [
-            'name'              => $dataset->controllerClass, //this is the fullpath and name+Controller suffix of the controller including the namespace
-            '--crud-name'       => $dataset->name, //name of the CRUD, filename and classname (this does not include the namespace)
-            '--model-name'      => ($dataset->modelName) ? $dataset->modelName : str_singular($dataset->name), //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
-            '--model-namespace' => ($dataset->modelNamespace) ? $dataset->modelNamespace : '', //do we have any namespace for the model?
-            '--view-path'       => $dataset->viewPath, //this is the view folder location /resources/views/xxxx it needs to remove any trailing slash.... if blank it will be saved directly in /resourves/views/{here}
-            '--route-path'      => ($dataset->routePath) ? $dataset->routePath : '', //Prefix of the route, it is the path to your CRUD. It does not include the file name, just the structured path.
-            '--pagination'      => ($dataset->perPage) ? $dataset->perPage : 10,
-            '--fields'          => $fields,
-            '--validations'     => ($dataset->validations) ? $dataset->validations : '']);
+        //if the toProcess is not set then process, or if the data is set then we check if controller is allowed to be produced.
+        if (!isset($dataset->toProcess) or in_array("controller", $dataset->toProcess)) {
 
-        $this->BufferCalls('crud:model', [
-            'name'            => $dataset->modelClass,
-            '--fillable'      => $fillable, //from post process
-            '--table'         => $dataset->tableName,
-            '--pk'            => '',
-            '--relationships' => $dataset->relationships, //this needs a bit of working
-        ]);
+            $this->BufferCalls('crud:controller', [
+                'name'                 => $dataset->controllerClass, //this is the fullpath and name+Controller suffix of the controller including the namespace
+                '--crud-name'          => $dataset->name, //name of the CRUD, filename and classname (this does not include the namespace)
+                '--model-name'         => $dataset->modelName, //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
+                '--model-namespace'    => $dataset->modelNamespace, //do we have any namespace for the model?
+                '--view-path'          => $dataset->viewPath, //this is the view folder location /resources/views/xxxx it needs to remove any trailing slash.... if blank it will be saved directly in /resourves/views/{here}
+                '--route-path'         => $dataset->routePath, //Prefix of the route, it is the path to your CRUD. It does not include the file name, just the structured path.
+                '--pagination'         => ($dataset->perPage) ? $dataset->perPage : 10,
+                '--fields'             => $fields,
+                '--validations'        => ($dataset->validations) ? $dataset->validations : '',
+                '--parent-model-class' => ($parentArray['parent_modelClass']) ? $parentArray['parent_modelClass'] : null,
+            ]);
 
-        $this->BufferCalls('crud:migration', [
-            'name'           => $dataset->migrationName,
-            '--schema'       => $fields,
-            '--pk'           => $dataset->primaryKey,
-            '--indices'      => $dataset->indices,
-            '--foreign-keys' => $dataset->foreignKeys,
-        ]);
+        }
 
-        $this->BufferCalls('crud:view', [
-            'name'          => $dataset->name,
-            '--fields'      => $fields,
-            '--validations' => $dataset->validations,
-            '--view-path'   => $dataset->viewPath,
-            '--route-path'  => ($dataset->routePath) ? $dataset->routePath : '',
-            '--localize'    => "no",
-            '--pk'          => $dataset->primaryKey,
-        ]);
+        //if the toProcess is not set then process, or if the data is set then we check if model is allowed to be produced.
+        if (!isset($dataset->toProcess) or in_array("model", $dataset->toProcess)) {
+            $this->BufferCalls('crud:model', [
+                'name'            => $dataset->modelClass,
+                '--fillable'      => $fillable, //from post process
+                '--table'         => $dataset->tableName,
+                '--pk'            => '',
+                '--relationships' => $dataset->relationships, //this needs a bit of working
+            ]);
+        }
 
-        $this->ProcessRoute($dataset->controllerClass, $dataset->FinalRouteName);
+        //if the toProcess is not set then process, or if the data is set then we check if migration is allowed to be produced.
+        if (!isset($dataset->toProcess) or in_array("migration", $dataset->toProcess)) {
+            $this->BufferCalls('crud:migration', [
+                'name'           => $dataset->migrationName,
+                '--schema'       => $fields,
+                '--pk'           => $dataset->primaryKey,
+                '--indices'      => $dataset->indices,
+                '--foreign-keys' => $dataset->foreignKeys,
+            ]);
+
+        }
+
+        //if the toProcess is not set then process, or if the data is set then we check if view is allowed to be produced.
+        if (!isset($dataset->toProcess) or in_array("view", $dataset->toProcess)) {
+            $info = [
+                'routePath'           => $dataset->routePath,
+                'modelName'           => $dataset->modelName,
+                'primaryKey'          => $dataset->primaryKey,
+                'viewPath'            => $dataset->viewPath,
+                'viewContainerFolder' => $viewContainerFolder,
+
+            ];
+
+            $this->complexCRUD->ProcessComplexJsonFields($dataset->name, $FieldArray, $info);
+        }
+
+
+
+        //if the route is not set then process
+        if (!isset($dataset->route) or $dataset->route == 'yes') {
+            $this->ProcessRoute($dataset->controllerClass, $dataset->FinalRouteName);
+        }
 
     }
 
@@ -412,29 +456,34 @@ class CrudCommand extends Command
                 $value[1]['--dateprefix'] = date('Y_m_d_His', strtotime("-" . $key . " sec"));
             }
 
-            $this->call($value[0], $value[1]);
+            if ($this->testMode == false) {
+                $this->call($value[0], $value[1]);
+            } else {
+                // print_r($value);
+            }
+
         }
         $this->callSilent('optimize');
 
     }
 
-    /**
-     * delays the call to sequence it properly
-     *
-     * @return array
-     * @author bramburn (icelabz.co.uk)
-     **/
+/**
+ * delays the call to sequence it properly
+ *
+ * @return array
+ * @author bramburn (icelabz.co.uk)
+ **/
     public function BufferCalls($call, $data)
     {
         $this->bufferedCalls[] = [$call, $data];
     }
 
-    /**
-     * undocumented function
-     *
-     * @return void
-     * @author bramburn (icelabz.co.uk)
-     **/
+/**
+ * undocumented function
+ *
+ * @return void
+ * @author bramburn (icelabz.co.uk)
+ **/
     protected function PreProcessFields($crud_entry)
     {
         $fields   = $this->ProcessComplexJsonFields($crud_entry->data->fields); //if there are any child fields it will run Create
@@ -443,78 +492,12 @@ class CrudCommand extends Command
         return [$fields, $fillable];
     }
 
-    /**
-     * This processes the crud entry to generate the model
-     *
-     * @return N/A
-     * @author bramburn (icelabz.co.uk)
-     **/
-    protected function CreateModelFromObj($crud_entry)
-    {
-        $currentModelClass = $crud_entry->modelNamespace . $crud_entry->modelName; //this is the full path of the model class, we'll check if it exists too!
-
-        if (class_exists($currentModelClass)) {
-            $this->error("Model " . $currentModelClass . " exists already");
-        } else {
-
-            $this->info("Model " . $currentModelClass . " does not exists...creating it now");
-            // generating fields
-            $fields   = $this->ProcessComplexJsonFields($crud_entry->data->fields); //if there are any child fields it will run Create
-            $fillable = $this->PostProcessFieldsForModels($fields);
-
-            // create model
-            $this->call('crud:model', [
-                'name'            => ($currentModelClass) ? $currentModelClass : '' . ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name),
-                '--fillable'      => $fillable, //from post process
-                '--table'         => ($crud_entry->tableName) ? $crud_entry->tableName : str_plural(snake_case($crud_entry->name)),
-                '--pk'            => '',
-                '--relationships' => $crud_entry->relationships, //this needs a bit of working
-            ]);
-
-            // add the resource to the route/web
-        }
-    }
-
-    /**
-     * This generates and calls the CRUD:controller
-     *
-     * @return n/a
-     * @author bramburn (icelabz.co.uk)
-     **/
-    protected function CreateControllerFromObj($crud_entry)
-    {
-
-        $currentControllerClass = $crud_entry->controller_namespace . $crud_entry->name; //this is the full path of the class, we'll check if it exists first! if not we stop.
-
-        if (class_exists($currentControllerClass)) {
-            $this->error("Controller " . $currentControllerClass . " exists already");
-        } else {
-
-            $this->info("Controller " . $currentControllerClass . " does not exists...creating it now");
-            // generating fields
-            $fields = $this->ProcessComplexJsonFields($crud_entry->data->fields);
-
-            $this->call('crud:controller', [
-                'name'              => $currentControllerClass . 'Controller', //this is the fullpath and name+Controller suffix of the controller including the namespace
-                '--crud-name'       => $crud_entry->name, //name of the CRUD, filename and classname (this does not include the namespace)
-                '--model-name'      => ($crud_entry->modelName) ? $crud_entry->modelName : str_singular($crud_entry->name), //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
-                '--model-namespace' => ($crud_entry->modelNamespace) ? $crud_entry->modelNamespace : '', //do we have any namespace for the model?
-                '--view-path'       => rtrim(($crud_entry->viewPath) ? $crud_entry->viewPath : '', '/'), //this is the view folder location /resources/views/xxxx it needs to remove any trailing slash.... if blank it will be saved directly in /resourves/views/{here}
-                '--route-path'      => ($crud_entry->routePath) ? $crud_entry->routePath : '', //Prefix of the route, it is the path to your CRUD. It does not include the file name, just the structured path.
-                '--pagination'      => ($crud_entry->perPage) ? $crud_entry->perPage : 10,
-                '--fields'          => $fields,
-                '--validations'     => ($crud_entry->validations) ? $crud_entry->validations : '']);
-
-        }
-
-    }
-
-    /**
-     * Processes the fields to Command syntax for crud:model
-     *
-     * @return string
-     * @author bramburn
-     **/
+/**
+ * Processes the fields to Command syntax for crud:model
+ *
+ * @return string
+ * @author bramburn
+ **/
     protected function PostProcessFieldsForModels($fields)
     {
         $fieldsArray   = explode(';', $fields);
@@ -531,29 +514,41 @@ class CrudCommand extends Command
         return $fillable;
     }
 
-    /**
-     * Processes the new complex json fields
-     *
-     * @return fieldString
-     * @author bramburn
-     **/
+/**
+ * Processes the new complex json fields
+ *
+ * @return fieldString
+ * @author bramburn
+ **/
     protected function ProcessComplexJsonFields($entry)
     {
         $fieldsString = '';
         foreach ($entry as $field) {
 
+            // check validations for array.
+            if (!empty($field->validations)) {
+                $v = explode("|", $field->validations);
+                if (in_array("required", $v)) {
+                    $field->required = true;
+                }
+
+            } else {
+                $field->required = false;
+            }
+
             switch ($field->type) {
                 case 'select':
+
+                    $FieldArray[] = (array) $field;
                     $fieldsString .= $field->name . '#' . $field->type . '#options=' . implode(',', $field->options) . ';';
                     break;
                 case 'OneToMany':
-                    // re-run the code to generate another controller
-                    // $this->CreateControllerFromObj($field->data);
-                    // $this->CreateModelFromObj($field->data);
+                    // do nothing
                     break;
 
                 default:
-                    $modifier = (isset($field->modifier)) ? '#' . $field->modifier : '';
+                    $FieldArray[] = (array) $field;
+                    $modifier     = (isset($field->modifier)) ? '#' . $field->modifier : '';
                     $fieldsString .= $field->name . '#' . $field->type . $modifier . ';';
                     break;
             }
@@ -561,6 +556,6 @@ class CrudCommand extends Command
         }
 
         $fieldsString = rtrim($fieldsString, ';');
-        return $fieldsString;
+        return [$fieldsString, $FieldArray];
     }
 }

@@ -20,7 +20,9 @@ class CrudControllerCommand extends GeneratorCommand
                             {--fields= : Fields name for the form & migration.}
                             {--validations= : Validation details for the fields.}
                             {--route-path= : Prefix of the route, it is the path to your CRUD}
-                            {--pagination=25 : The amount of models per page for index pages.}';
+                            {--pagination=25 : The amount of models per page for index pages.}
+                            {--parent-model-class= : The Parent model class.}
+                            ';
 
     /**
      * The console command description.
@@ -35,7 +37,9 @@ class CrudControllerCommand extends GeneratorCommand
      * @var string
      */
     protected $type = 'Controller';
+    protected $stubDirectory;
 
+    protected $complexCRUD;
     /**
      * Get the stub file for the generator.
      *
@@ -43,9 +47,9 @@ class CrudControllerCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return config('crudgenerator.custom_template')
-        ? config('crudgenerator.path') . '/controller.stub'
-        : __DIR__ . '/../stubs/controller.stub';
+        $this->stubDirectory = config('crudgenerator.custom_template') ? config('crudgenerator.path') : __DIR__ . '/../stubs/';
+        return $this->stubDirectory . '/controller.stub';
+
     }
 
     /**
@@ -84,6 +88,9 @@ class CrudControllerCommand extends GeneratorCommand
         $viewContainerFolder = snake_case($this->option('crud-name'), '-'); //this is not really a name of the file but the folder in which the create, edit, show, index live.
         $fields              = $this->option('fields');
         $validations         = rtrim($this->option('validations'), ';');
+
+        // Parse the CODE
+        $this->ProcessParentCode($stub);
 
         $validationRules = '';
         if (trim($validations) != '') {
@@ -144,6 +151,22 @@ EOD;
             ->replacePaginationNumber($stub, $perPage) //Called in this class
             ->replaceFileSnippet($stub, $fileSnippet) //Called in this class
             ->replaceClass($stub, $fullNameSpaceName); //called in Illuminiate\Console\GeneratorCommand
+    }
+
+    /**
+     * This calls the CRUD complex class
+     *
+     * @return void
+     * @author
+     **/
+    protected function ProcessParentCode($stub)
+    {
+        $CRUDComplex = new \Appzcoder\CrudGenerator\shared\CRUDcomplexClass();
+
+        $parentModel = ($this->option('parent-model-class') != null) ? $this->option('parent-model-class') : null;
+
+        return $CRUDComplex->ProcessControllerCreateStub($stub, $parentModel);
+
     }
 
     /**

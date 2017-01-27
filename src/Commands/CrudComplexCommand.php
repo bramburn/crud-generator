@@ -51,10 +51,66 @@ class CrudComplexCommand extends Command
         $this->info('test run');
         try
         {
-            $json = File::get($fullFilePath);
+            $json = File::get('./complex.json');
         } catch (Illuminate\Filesystem\FileNotFoundException $exception) {
             $this->error("File does not exists");
         }
+
+        $data = json_decode($json);
+
+        foreach ($data as $entry) {
+            // each entry is a CRUD
+
+            foreach ($entry as $crud_entry) {
+                // $this->CreateControllerFromObj($crud_entry); // only creates the Controller Commands
+                // $this->CreateModelFromObj($crud_entry); // only creates the Model commands
+                list($zero, $one) = $this->ProcessComplexJsonFields($crud_entry->data->fields);
+                dd($one[0]);
+            }
+
+            // $this->info("Creating CRUD - ".$entry-)
+        }
+
+    }
+
+    protected function ProcessComplexJsonFields($entry)
+    {
+        $fieldsString = '';
+        foreach ($entry as $field) {
+
+            // check validations for array.
+            if(!empty($field->validations))
+            {
+                $v = explode("|",$field->validations);
+                if(in_array("required",$v))
+                {
+                    $field->required = true;
+                }
+                
+            }
+
+            switch ($field->type) {
+                case 'select':
+                    $FieldArray[] = (array) $field;
+                    $fieldsString .= $field->name . '#' . $field->type . '#options=' . implode(',', $field->options) . ';';
+                    break;
+                case 'OneToMany':
+                    // re-run the code to generate another controller
+                    // $this->CreateControllerFromObj($field->data);
+                    // $this->CreateModelFromObj($field->data);
+                    break;
+
+                default:
+                    $FieldArray[] = (array) $field;
+                    $modifier     = (isset($field->modifier)) ? '#' . $field->modifier : '';
+                    $fieldsString .= $field->name . '#' . $field->type . $modifier . ';';
+                    break;
+            }
+
+        }
+
+        $fieldsString = rtrim($fieldsString, ';');
+        return [$fieldsString, $FieldArray];
     }
 
 }

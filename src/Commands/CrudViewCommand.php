@@ -19,7 +19,8 @@ class CrudViewCommand extends Command
                             {--route-path= : Prefix of the route, it is path to the CRUD}
                             {--pk=id : The name of the primary key.}
                             {--validations= : Validation details for the fields.}
-                            {--localize=no : Localize the view? yes|no.}';
+                            {--localize=no : Localize the view? yes|no.}
+                            ';
 
     /**
      * The console command description.
@@ -192,18 +193,10 @@ class CrudViewCommand extends Command
         $this->primaryKey          = $this->option('pk');
         $this->routePath           = ($this->option('route-path')) ? $this->option('route-path') . '/' : $this->option('route-path');
         $this->viewContainerFolder = snake_case($this->argument('name'), '-');
+        $this->userViewPath        = ($this->option('view-path')) ? $this->option('view-path') : null;
 
-        $viewDirectory = config('view.paths')[0] . '/';
-        if ($this->option('view-path')) {
-            $this->userViewPath = $this->option('view-path');
-            $path               = $viewDirectory . $this->userViewPath . '/' . $this->viewContainerFolder . '/';
-        } else {
-            $path = $viewDirectory . $this->viewContainerFolder . '/';
-        }
-
-        if (!File::isDirectory($path)) {
-            File::makeDirectory($path, 0755, true);
-        }
+        // check if the view directory exists
+        $path = $this->CreateDirectory($this->userViewPath, $this->viewContainerFolder);
 
         $fields      = $this->option('fields');
         $fieldsArray = explode(';', $fields);
@@ -306,6 +299,11 @@ class CrudViewCommand extends Command
         $this->info('View created successfully.');
     }
 
+    
+
+   
+
+
     /**
      * Update values between %% with real values in index view.
      *
@@ -397,154 +395,5 @@ class CrudViewCommand extends Command
         File::put($newShowFile, str_replace('%%routePath%%', $this->routePath, File::get($newShowFile)));
     }
 
-    /**
-     * Form field wrapper.
-     *
-     * @param  string $item
-     * @param  string $field
-     *
-     * @return void
-     */
-    protected function wrapField($item, $field)
-    {
-        $formGroup = File::get($this->viewDirectoryPath . 'form-fields/wrap-field.blade.stub');
-
-        $labelText = "'" . ucwords(strtolower(str_replace('_', ' ', $item['name']))) . "'";
-
-        if ($this->option('localize') == 'yes') {
-            $labelText = 'trans(\'' . $this->crudName . '.' . $item['name'] . '\')';
-        }
-
-        return sprintf($formGroup, $item['name'], $labelText, $field);
-    }
-
-    /**
-     * Form field generator.
-     *
-     * @param  array $item
-     *
-     * @return string
-     */
-    protected function createField($item)
-    {
-        switch ($this->typeLookup[$item['type']]) {
-            case 'password':
-                return $this->createPasswordField($item);
-                break;
-            case 'datetime-local':
-            case 'time':
-                return $this->createInputField($item);
-                break;
-            case 'radio':
-                return $this->createRadioField($item);
-                break;
-            case 'select':
-            case 'enum':
-                return $this->createSelectField($item);
-                break;
-            default: // text
-                return $this->createFormField($item);
-        }
-    }
-
-    /**
-     * Create a specific field using the form helper.
-     *
-     * @param  array $item
-     *
-     * @return string
-     */
-    protected function createFormField($item)
-    {
-        $required = ($item['required'] === true) ? ", 'required' => 'required'" : "";
-
-        $markup = File::get($this->viewDirectoryPath . 'form-fields/form-field.blade.stub');
-        $markup = str_replace('%%required%%', $required, $markup);
-        $markup = str_replace('%%fieldType%%', $this->typeLookup[$item['type']], $markup);
-        $markup = str_replace('%%itemName%%', $item['name'], $markup);
-
-        return $this->wrapField(
-            $item,
-            $markup
-        );
-    }
-
-    /**
-     * Create a password field using the form helper.
-     *
-     * @param  array $item
-     *
-     * @return string
-     */
-    protected function createPasswordField($item)
-    {
-        $required = ($item['required'] === true) ? ", 'required' => 'required'" : "";
-
-        $markup = File::get($this->viewDirectoryPath . 'form-fields/password-field.blade.stub');
-        $markup = str_replace('%%required%%', $required, $markup);
-        $markup = str_replace('%%itemName%%', $item['name'], $markup);
-
-        return $this->wrapField(
-            $item,
-            $markup
-        );
-    }
-
-    /**
-     * Create a generic input field using the form helper.
-     *
-     * @param  array $item
-     *
-     * @return string
-     */
-    protected function createInputField($item)
-    {
-        $required = ($item['required'] === true) ? ", 'required' => 'required'" : "";
-
-        $markup = File::get($this->viewDirectoryPath . 'form-fields/input-field.blade.stub');
-        $markup = str_replace('%%required%%', $required, $markup);
-        $markup = str_replace('%%fieldType%%', $this->typeLookup[$item['type']], $markup);
-        $markup = str_replace('%%itemName%%', $item['name'], $markup);
-
-        return $this->wrapField(
-            $item,
-            $markup
-        );
-    }
-
-    /**
-     * Create a yes/no radio button group using the form helper.
-     *
-     * @param  array $item
-     *
-     * @return string
-     */
-    protected function createRadioField($item)
-    {
-        $markup = File::get($this->viewDirectoryPath . 'form-fields/radio-field.blade.stub');
-
-        return $this->wrapField($item, sprintf($markup, $item['name']));
-    }
-
-    /**
-     * Create a select field using the form helper.
-     *
-     * @param  array $item
-     *
-     * @return string
-     */
-    protected function createSelectField($item)
-    {
-        $required = ($item['required'] === true) ? ", 'required' => 'required'" : "";
-
-        $markup = File::get($this->viewDirectoryPath . 'form-fields/select-field.blade.stub');
-        $markup = str_replace('%%required%%', $required, $markup);
-        $markup = str_replace('%%options%%', $item['options'], $markup);
-        $markup = str_replace('%%itemName%%', $item['name'], $markup);
-
-        return $this->wrapField(
-            $item,
-            $markup
-        );
-    }
+    
 }
