@@ -142,7 +142,7 @@ class CRUDcomplexClass
             '%%crudName%%'            => $strLowerName, //k
             '%%crudNameCap%%'         => ucwords($strLowerName), //ok
             '%%crudNameSingular%%'    => str_singular($strLowerName), //ok
-            '%%ParentModelClass%%'    => $info['parent_modelClass'],
+            
             '%%modelName%%'           => $info['modelName'],
             '%%primaryKey%%'          => $info['primaryKey'],
             '%%routePath%%'           => $info['routePath'],
@@ -223,7 +223,8 @@ class CRUDcomplexClass
             $namespace      = "";
             $controllerStub = $this->viewDirectoryPath . 'extensions/normal.controller.create.stub';
         }
-        $templateData['{{controller.create}}']    = $controllerStub; // add controller function
+        $controllerStubContent = File::get($controllerStub);
+        $templateData['{{controller.create}}']    = $controllerStubContent; // add controller function
         $templateData['{{parentModelNamespace}}'] = $namespace; // add parent model
         $html                                     = $this->ParseHTML($html, $templateData);
 

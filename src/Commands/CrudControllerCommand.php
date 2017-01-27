@@ -90,7 +90,7 @@ class CrudControllerCommand extends GeneratorCommand
         $validations         = rtrim($this->option('validations'), ';');
 
         // Parse the CODE
-        $this->ProcessParentCode($stub);
+        $stub = $this->ProcessParentCode($stub);
 
         $validationRules = '';
         if (trim($validations) != '') {

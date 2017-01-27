@@ -306,6 +306,8 @@ class CrudCommand extends Command
             array_push($dataset->data->fields, (object) $fieldsToAdd);
         }
 
+
+
         // check fields
         foreach ($dataset->data->fields as $field) {
             if ($field->type == "OneToMany") {
@@ -327,7 +329,7 @@ class CrudCommand extends Command
 
                 // send parent data through to the child class
                 $_parentArray = [
-                    'parent_modelClass' => $dataset->modelClass, //namespance + class name
+                    'parent_modelClass' => $dataset->modelClass //namespance + class name
 
                 ];
 
@@ -389,7 +391,7 @@ class CrudCommand extends Command
                 '--pagination'         => ($dataset->perPage) ? $dataset->perPage : 10,
                 '--fields'             => $fields,
                 '--validations'        => ($dataset->validations) ? $dataset->validations : '',
-                '--parent-model-class' => ($parentArray['parent_modelClass']) ? $parentArray['parent_modelClass'] : null,
+                '--parent-model-class' => (isset($parentArray['parent_modelClass'])) ? $parentArray['parent_modelClass'] : null,
             ]);
 
         }
