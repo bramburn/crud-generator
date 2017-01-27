@@ -22,7 +22,8 @@ class CrudControllerCommand extends GeneratorCommand
                             {--route-path= : Prefix of the route, it is the path to your CRUD}
                             {--pagination=25 : The amount of models per page for index pages.}
                             {--parent-model-class= : The Parent model class.}
-                            ';
+                            {--parent-field-select-format= : The parent field select format}
+                            {--parent-field= : The parent relationship field}';
 
     /**
      * The console command description.
@@ -163,9 +164,13 @@ EOD;
     {
         $CRUDComplex = new \Appzcoder\CrudGenerator\shared\CRUDcomplexClass();
 
-        $parentModel = ($this->option('parent-model-class') != null) ? $this->option('parent-model-class') : null;
+        $parentModel             = ($this->option('parent-model-class') != null) ? $this->option('parent-model-class') : null;
+        $parentFieldSelectFormat = ($this->option('parent-field-select-format') != null) ? $this->option('parent-field-select-format') : null;
+        $parentField             = ($this->option('parent-field') != null) ? $this->option('parent-field') : null;
 
-        return $CRUDComplex->ProcessControllerCreateStub($stub, $parentModel);
+        $stub = $CRUDComplex->ProcessControllerChildStub($stub, $parentModel, $parentFieldSelectFormat, $parentField);
+
+        return $stub;
 
     }
 

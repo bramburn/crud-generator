@@ -71,7 +71,7 @@ class CRUDcomplexClass
      * @return html
      * @author bramburn (icelabz.co.uk)
      **/
-    public function ProcessComplexJsonFields($crudName, $entryFields, $info)
+    public function ProcessComplexJsonFieldsForView($crudName, $entryFields, $info)
     {
         $info_check = [
             'routePath',
@@ -92,16 +92,21 @@ class CRUDcomplexClass
         }
 
         // cleanup for multiple process
-        $this->formFieldsHtml          = '';
-        $this->formHeadingHtml         = '';
-        $this->formBodyHtml            = '';
-        $this->formBodyHtmlForShowView = '';
+        $formFieldsHtml          = '';
+        $formHeadingHTML         = '';
+        $formBodyHtml            = '';
+        $formBodyHtmlForShowView = '';
 
         // Create Directory
         $path = $this->CreateDirectory($info['viewPath'], $info['viewContainerFolder']);
 
-        // Process Fields
+        // Process Fields and create the relevant HTML code for each
         foreach ($entryFields as $value) {
+
+           
+
+             $field = $value['name'];
+                $label = ucwords(str_replace('_', ' ', $field));
 
             if ($value['type'] == 'select' && isset($value['options'])) {
 
@@ -112,25 +117,34 @@ class CRUDcomplexClass
 
                 $value['options'] = $options;
             }
-            if (!isset($value['showform']) or $value['showform'] != 'no') {
-                $this->formFieldsHtml .= $this->createField($value);
+
+
+
+            // Process parent field if exists
+            if (isset($value['ParentDropDown']) and $value['ParentDropDown'] == true) {
+                $formFieldsHtml .= $this->CreateParentSelectField($value);
+                
+            }
+            elseif (!isset($value['showform']) or $value['showform'] != 'no') {
+                $formFieldsHtml .= $this->createField($value);
+               
             }
 
+
+            // Process and add to index array
             // by default if showInIndex is not defined then we show or if it is defined and isn't 'no' show
             if (!isset($value['showInIndex']) or $value['showInIndex'] != 'no') {
 
-                $field = $value['name'];
-                $label = ucwords(str_replace('_', ' ', $field));
+               
                 // if ($this->option('localize') == 'yes') {
                 //     $label = '{{ trans(\'' . $crudName . '.' . $field . '\') }}';
                 // }
-                $this->formHeadingHtml .= '<th> ' . $label . ' </th>' . "\n";
-                $this->formBodyHtml .= '<td>{{ $item->' . $field . ' }}</td>' . "\n";
-
+                $formHeadingHTML .= '<th> ' . $label . ' </th>' . "\n";
+                $formBodyHtml .= '<td>{{ $item->' . $field . ' }}</td>' . "\n";
+                $formBodyHtmlForShowView .= '<tr><th> ' . $label . ' </th><td> {{ $%%crudNameSingular%%->' . $field . ' }} </td></tr>';
             }
-
-            // Still show information in ShowView
-            $this->formBodyHtmlForShowView .= '<tr><th> ' . $label . ' </th><td> {{ $%%crudNameSingular%%->' . $field . ' }} </td></tr>';
+            
+            
 
         }
 
@@ -142,7 +156,6 @@ class CRUDcomplexClass
             '%%crudName%%'            => $strLowerName, //k
             '%%crudNameCap%%'         => ucwords($strLowerName), //ok
             '%%crudNameSingular%%'    => str_singular($strLowerName), //ok
-            
             '%%modelName%%'           => $info['modelName'],
             '%%primaryKey%%'          => $info['primaryKey'],
             '%%routePath%%'           => $info['routePath'],
@@ -152,10 +165,10 @@ class CRUDcomplexClass
         ];
 
         // double fried chips
-        $templateData['%%formFieldsHtml%%']          = $this->ParseHTML($this->formFieldsHtml, $templateData); //generated here
-        $templateData['%%formBodyHtml%%']            = $this->ParseHTML($this->formBodyHtml, $templateData); //generated here
-        $templateData['%%formBodyHtmlForShowView%%'] = $this->ParseHTML($this->formBodyHtmlForShowView, $templateData); //generated here
-        $templateData['%%formHeadingHtml%%']         = $this->ParseHTML($this->formHeadingHtml, $templateData); //generated here
+        $templateData['%%formFieldsHtml%%']          = $this->ParseHTML($formFieldsHtml, $templateData); //generated here
+        $templateData['%%formBodyHtml%%']            = $this->ParseHTML($formBodyHtml, $templateData); //generated here
+        $templateData['%%formBodyHtmlForShowView%%'] = $this->ParseHTML($formBodyHtmlForShowView, $templateData); //generated here
+        $templateData['%%formHeadingHtml%%']         = $this->ParseHTML($formHeadingHTML, $templateData); //generated here
 
         // DTEST
 
@@ -214,18 +227,35 @@ class CRUDcomplexClass
      * @return html/php
      * @author bramburn (icelabz.co.uk)
      **/
-    public function ProcessControllerCreateStub($html, $parentNamespace = null)
+    public function ProcessControllerChildStub($html, $parentNamespace = null, $parentFormat = null, $parentField = null)
     {
         if ($parentNamespace != null) {
-            $namespace      = "use " . $parentNamespace . " as ParentModel;";
-            $controllerStub = $this->viewDirectoryPath . 'extensions/child.controller.create.stub';
+            $namespace            = "use App\\" . $parentNamespace . " as ParentModel;";
+            $controllerCreateStub = $this->viewDirectoryPath . 'extensions/child.controller.create.stub';
+            $controllerEditStub   = $this->viewDirectoryPath . 'extensions/child.controller.edit.stub';
+
+            if ($parentFormat != null) {
+                $re = '/%%([a-zA-Z_-]+)%%/';
+
+                $_finalParentFormat = preg_replace($re, '$item->$1', $parentFormat);
+
+            } else {
+                $_finalParentFormat = '$item->id';
+            }
+
         } else {
-            $namespace      = "";
-            $controllerStub = $this->viewDirectoryPath . 'extensions/normal.controller.create.stub';
+            $namespace            = "";
+            $controllerCreateStub = $this->viewDirectoryPath . 'extensions/normal.controller.create.stub';
+            $controllerEditStub   = $this->viewDirectoryPath . 'extensions/normal.controller.edit.stub';
+
         }
-        $controllerStubContent = File::get($controllerStub);
-        $templateData['{{controller.create}}']    = $controllerStubContent; // add controller function
+        $controllerCreateStubContent              = File::get($controllerCreateStub);
+        $controllerEditStubContent                = File::get($controllerEditStub);
+        $templateData['{{controller.create}}']    = $controllerCreateStubContent; // add controller function
+        $templateData['{{controller.edit}}']      = $controllerEditStubContent; // add controller function
+        $templateData['{{ParentField}}']          = ($parentField != null) ? $parentField : '';
         $templateData['{{parentModelNamespace}}'] = $namespace; // add parent model
+        $templateData['{{ParentListFormat}}']     = (isset($_finalParentFormat)) ? $_finalParentFormat : '';
         $html                                     = $this->ParseHTML($html, $templateData);
 
         return $html;
@@ -345,6 +375,25 @@ class CRUDcomplexClass
             default: // text
                 return $this->createFormField($item);
         }
+    }
+
+    /**
+     * This creates the array for the parent field
+     *
+     * @return html
+     * @author bramburn (icelabz.co.uk)
+     **/
+    protected function CreateParentSelectField($item)
+    {
+
+        $markup = File::get($this->viewDirectoryPath . 'form-fields/parent-select-field.blade.stub');
+
+        $markup = str_replace('%%itemName%%', $item['name'], $markup);
+
+        return $this->wrapField(
+            $item,
+            $markup
+        );
     }
 
     /**

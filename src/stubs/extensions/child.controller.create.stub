@@ -5,7 +5,16 @@
      */
     public function create(ParentModel $parent)
     {
-    	$parentlist = $parent->all();
+    	$parentData = $parent->all();
+        $parentList = [];
+        if(!empty($parentData))
+        {
+            foreach($parentData as $item)
+            {
+                $parentList[$item->id] = "{{ParentListFormat}}";
+            }
+            
+        }
 
-        return view('{{viewPath}}{{viewContainerFolder}}.create', compact('parentlist'));
+        return view('{{viewPath}}{{viewContainerFolder}}.create', compact('parentData','parentList'));
     }

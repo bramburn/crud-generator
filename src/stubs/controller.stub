@@ -59,19 +59,7 @@ class DummyClass extends Controller
         return view('{{viewPath}}{{viewContainerFolder}}.show', compact('{{crudNameSingular}}'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     *
-     * @return \Illuminate\View\View
-     */
-    public function edit($id)
-    {
-        ${{crudNameSingular}} = {{modelName}}::findOrFail($id);
-
-        return view('{{viewPath}}{{viewContainerFolder}}.edit', compact('{{crudNameSingular}}'));
-    }
+{{controller.edit}}
 
     /**
      * Update the specified resource in storage.

@@ -1,0 +1,26 @@
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     *
+     * @return \Illuminate\View\View
+     */
+    public function edit(ParentModel $parent, $id)
+    {
+        ${{crudNameSingular}} = {{modelName}}::findOrFail($id);
+
+        $parentData = $parent->all();
+        $parentList = [];
+        if(!empty($parentData))
+        {
+            foreach($parentData as $item)
+            {
+                $parentList[$item->id] = "{{ParentListFormat}}";
+            }
+            
+        }
+
+        $SelectedParent = (${{crudNameSingular}}->{{ParentField}})?${{crudNameSingular}}->{{ParentField}}:null;
+
+        return view('{{viewPath}}{{viewContainerFolder}}.edit', compact('{{crudNameSingular}}','parentList','SelectedParent'));
+    }

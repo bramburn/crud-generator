@@ -1,0 +1,1 @@
+{!! Form::select('%%itemName%%', $parentList, null, ['class' => 'form-control', 'required' => 'required']) !!}

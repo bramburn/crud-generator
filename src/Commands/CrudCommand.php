@@ -303,10 +303,13 @@ class CrudCommand extends Command
 
         $relationshipString = "";
         if (!is_null($fieldsToAdd)) {
-            array_push($dataset->data->fields, (object) $fieldsToAdd);
+
+            array_push($dataset->data->fields, $fieldsToAdd);
         }
 
-
+        if (!empty($parentArray)) {
+            $this->comment('We have some data from the parent CRUD');
+        }
 
         // check fields
         foreach ($dataset->data->fields as $field) {
@@ -317,11 +320,12 @@ class CrudCommand extends Command
                 $parentid = str_singular($dataset->name) . "_id";
 
                 $_fieldToAdd = (object) [
-                    "name"        => $parentid,
-                    "type"        => "integer",
-                    "showform"    => "no",
-                    "showInIndex" => "no",
-                    "modifier"    => 'unsigned',
+                    "name"           => $parentid,
+                    "type"           => "integer",
+                    "showform"       => "no",
+                    "ParentDropDown" => true,
+                    "showInIndex"    => "no",
+                    "modifier"       => 'unsigned',
                 ];
                 $fk               = str_singular($dataset->name) . "_id";
                 $_belongsTo       = str_singular($dataset->name) . '#belongsTo#App\\' . $dataset->modelClass . '|' . $fk . '|id';
@@ -329,7 +333,7 @@ class CrudCommand extends Command
 
                 // send parent data through to the child class
                 $_parentArray = [
-                    'parent_modelClass' => $dataset->modelClass //namespance + class name
+                    'parent_modelClass' => $dataset->modelClass, //namespance + class name
 
                 ];
 
@@ -382,16 +386,18 @@ class CrudCommand extends Command
         if (!isset($dataset->toProcess) or in_array("controller", $dataset->toProcess)) {
 
             $this->BufferCalls('crud:controller', [
-                'name'                 => $dataset->controllerClass, //this is the fullpath and name+Controller suffix of the controller including the namespace
-                '--crud-name'          => $dataset->name, //name of the CRUD, filename and classname (this does not include the namespace)
-                '--model-name'         => $dataset->modelName, //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
-                '--model-namespace'    => $dataset->modelNamespace, //do we have any namespace for the model?
-                '--view-path'          => $dataset->viewPath, //this is the view folder location /resources/views/xxxx it needs to remove any trailing slash.... if blank it will be saved directly in /resourves/views/{here}
-                '--route-path'         => $dataset->routePath, //Prefix of the route, it is the path to your CRUD. It does not include the file name, just the structured path.
-                '--pagination'         => ($dataset->perPage) ? $dataset->perPage : 10,
-                '--fields'             => $fields,
-                '--validations'        => ($dataset->validations) ? $dataset->validations : '',
-                '--parent-model-class' => (isset($parentArray['parent_modelClass'])) ? $parentArray['parent_modelClass'] : null,
+                'name'                         => $dataset->controllerClass, //this is the fullpath and name+Controller suffix of the controller including the namespace
+                '--crud-name'                  => $dataset->name, //name of the CRUD, filename and classname (this does not include the namespace)
+                '--model-name'                 => $dataset->modelName, //here we need to let the system know what model we are using for this. This is going to be the filename +class name from reading the stub templates.
+                '--model-namespace'            => $dataset->modelNamespace, //do we have any namespace for the model?
+                '--view-path'                  => $dataset->viewPath, //this is the view folder location /resources/views/xxxx it needs to remove any trailing slash.... if blank it will be saved directly in /resourves/views/{here}
+                '--route-path'                 => $dataset->routePath, //Prefix of the route, it is the path to your CRUD. It does not include the file name, just the structured path.
+                '--pagination'                 => ($dataset->perPage) ? $dataset->perPage : 10,
+                '--fields'                     => $fields,
+                '--validations'                => ($dataset->validations) ? $dataset->validations : '',
+                '--parent-model-class'         => (isset($parentArray['parent_modelClass'])) ? $parentArray['parent_modelClass'] : null,
+                '--parent-field-select-format' => (isset($dataset->ParentListFormat)) ? $dataset->ParentListFormat : null,
+                '--parent-field'               => (isset($fieldsToAdd->name)) ? $fieldsToAdd->name : null,
             ]);
 
         }
@@ -419,6 +425,8 @@ class CrudCommand extends Command
 
         }
 
+        
+
         //if the toProcess is not set then process, or if the data is set then we check if view is allowed to be produced.
         if (!isset($dataset->toProcess) or in_array("view", $dataset->toProcess)) {
             $info = [
@@ -430,10 +438,8 @@ class CrudCommand extends Command
 
             ];
 
-            $this->complexCRUD->ProcessComplexJsonFields($dataset->name, $FieldArray, $info);
+            $this->complexCRUD->ProcessComplexJsonFieldsForView($dataset->name, $FieldArray, $info);
         }
-
-
 
         //if the route is not set then process
         if (!isset($dataset->route) or $dataset->route == 'yes') {
