@@ -71,7 +71,7 @@ class CRUDcomplexClass
      * @return html
      * @author bramburn (icelabz.co.uk)
      **/
-    public function ProcessComplexJsonFieldsForView($crudName, $entryFields, $info)
+    public function ProcessComplexJsonFieldsForView($crudName, $entryFields, $info,$childArray = array())
     {
         $info_check = [
             'routePath',
@@ -103,10 +103,8 @@ class CRUDcomplexClass
         // Process Fields and create the relevant HTML code for each
         foreach ($entryFields as $value) {
 
-           
-
-             $field = $value['name'];
-                $label = ucwords(str_replace('_', ' ', $field));
+            $field = $value['name'];
+            $label = ucwords(str_replace('_', ' ', $field));
 
             if ($value['type'] == 'select' && isset($value['options'])) {
 
@@ -118,24 +116,19 @@ class CRUDcomplexClass
                 $value['options'] = $options;
             }
 
-
-
             // Process parent field if exists
             if (isset($value['ParentDropDown']) and $value['ParentDropDown'] == true) {
                 $formFieldsHtml .= $this->CreateParentSelectField($value);
-                
-            }
-            elseif (!isset($value['showform']) or $value['showform'] != 'no') {
-                $formFieldsHtml .= $this->createField($value);
-               
-            }
 
+            } elseif (!isset($value['showform']) or $value['showform'] != 'no') {
+                $formFieldsHtml .= $this->createField($value);
+
+            }
 
             // Process and add to index array
             // by default if showInIndex is not defined then we show or if it is defined and isn't 'no' show
             if (!isset($value['showInIndex']) or $value['showInIndex'] != 'no') {
 
-               
                 // if ($this->option('localize') == 'yes') {
                 //     $label = '{{ trans(\'' . $crudName . '.' . $field . '\') }}';
                 // }
@@ -143,8 +136,6 @@ class CRUDcomplexClass
                 $formBodyHtml .= '<td>{{ $item->' . $field . ' }}</td>' . "\n";
                 $formBodyHtmlForShowView .= '<tr><th> ' . $label . ' </th><td> {{ $%%crudNameSingular%%->' . $field . ' }} </td></tr>';
             }
-            
-            
 
         }
 
@@ -169,6 +160,28 @@ class CRUDcomplexClass
         $templateData['%%formBodyHtml%%']            = $this->ParseHTML($formBodyHtml, $templateData); //generated here
         $templateData['%%formBodyHtmlForShowView%%'] = $this->ParseHTML($formBodyHtmlForShowView, $templateData); //generated here
         $templateData['%%formHeadingHtml%%']         = $this->ParseHTML($formHeadingHTML, $templateData); //generated here
+
+        if ($hasChild) {
+            // define child index file
+            $childIndex    = $this->viewDirectoryPath . 'extensions/child.view.index.stub';
+
+
+            foreach ($childArray as $childView) {
+                
+                $newchildIndex = $path . 'childIndex.blade.php';
+                $childView['%%FullChildRoutePath%%'] = $childView['FullChildRoutePath'];
+                $childView['%%childRouteName%%'] = $childView['childRouteName']; // this is the child route name defined in the route
+                $childView['%%ChildDBObject%%'] = $childView['ChildDBObject']; // this is what is defined in the controller class
+
+                // create a copy of the index file for each child
+                if (!File::copy($childIndex, $newchildIndex)) {
+                    echo "failed to copy $indexFile...\n";
+                } else {
+                    $this->ProcessStubFile($newchildIndex, $templateData);
+                }
+            }
+
+        }
 
         // DTEST
 

@@ -425,7 +425,7 @@ class CrudCommand extends Command
 
         }
 
-        
+
 
         //if the toProcess is not set then process, or if the data is set then we check if view is allowed to be produced.
         if (!isset($dataset->toProcess) or in_array("view", $dataset->toProcess)) {
@@ -445,6 +445,16 @@ class CrudCommand extends Command
         if (!isset($dataset->route) or $dataset->route == 'yes') {
             $this->ProcessRoute($dataset->controllerClass, $dataset->FinalRouteName);
         }
+
+        // I am a child; here are some information you need to know about me
+
+        $childData = [
+        'FullChildRoutePath'=>$dataset->viewPath,
+        'relationshipModelName'=>
+
+        ];
+
+        return 
 
     }
 
